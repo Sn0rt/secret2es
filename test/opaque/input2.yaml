@@ -1,0 +1,20 @@
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: input1
+  annotations:
+    avp.kubernetes.io/path: "secret/data/foo"
+type: Opaque
+data:
+  dist: <dist-name-of-linux>
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: input2
+  annotations:
+    avp.kubernetes.io/path: "secret/data/foo"
+type: Opaque
+data:
+  dist: <dist-name-of-linux>
