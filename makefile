@@ -15,7 +15,7 @@ LDFLAGS=-ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}"
 all: test build
 
 build:
-	$(GOBUILD) -v -o $(BINARY_NAME) ${LDFLAGS} cmd/sercert2es.go
+	$(GOBUILD) -v -o $(BINARY_NAME) ${LDFLAGS} cmd/secret2es.go
 
 test:
 	$(GOTEST) -v ./...

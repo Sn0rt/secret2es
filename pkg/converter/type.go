@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+const (
+	SecretStoreType        = "SecretStore"
+	ClusterSecretStoreType = "ClusterSecretStore"
+)
+
 type UnstructuredSecret struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object's metadata.
@@ -30,7 +35,7 @@ type UnstructuredSecret struct {
 	Data map[string]string `json:"data,omitempty" protobuf:"bytes,2,rep,name=data"`
 
 	// stringData allows specifying non-binary secret data in string form.
-	// It is provided as a write-only input field for convenience.
+	// It is provided as a write-only inputSecret field for convenience.
 	// All keys and values are merged into the data field on write, overwriting any existing values.
 	// The stringData field is never output when reading from the API.
 	// +k8s:conversion-gen=false
@@ -49,10 +54,13 @@ func splitYAMLDocuments(data string) []string {
 
 func parseUnstructuredSecret(body []byte) ([]UnstructuredSecret, error) {
 	var secrets []UnstructuredSecret
-	for _, data := range splitYAMLDocuments(string(body)) {
+	for _, yamlContent := range splitYAMLDocuments(string(body)) {
+		if !strings.Contains(yamlContent, "kind: Secret") {
+			continue
+		}
 		inputSecret := &UnstructuredSecret{}
-		if err := yaml.Unmarshal([]byte(data), &inputSecret); err != nil {
-			return nil, fmt.Errorf("error unmarshalling input secret: %w", err)
+		if err := yaml.Unmarshal([]byte(yamlContent), &inputSecret); err != nil {
+			return nil, fmt.Errorf("error unmarshalling inputSecret secret: %w", err)
 		}
 		secrets = append(secrets, *inputSecret)
 	}

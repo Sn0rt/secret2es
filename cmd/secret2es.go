@@ -22,7 +22,7 @@ func main() {
 
 func setupAndExecute() error {
 	rootCmd := &cobra.Command{
-		Use:   "sercert2es",
+		Use:   "secret2es",
 		Short: "A tool to convert Kubernetes secrets to External Secrets",
 	}
 
@@ -37,37 +37,40 @@ func extSecretGenCmd() *cobra.Command {
 		Use:   "extsecret-gen",
 		Short: "Generate external secrets from corev1 secrets",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			input, _ := cmd.Flags().GetString("input")
-			_, _ = cmd.Flags().GetString("output")
-			store, _ := cmd.Flags().GetString("store")
-			storeName, _ := cmd.Flags().GetString("storename")
-			namespace, _ := cmd.Flags().GetString("namespace")
-			secretName, _ := cmd.Flags().GetString("secret-name")
-			verbose, _ := cmd.Flags().GetBool("verbose")
-
-			err := converter.ConvertSecret(input, store, storeName, namespace, secretName, verbose)
+			inputPath, err := cmd.Flags().GetString("input")
 			if err != nil {
 				return err
 			}
-
-			if verbose {
-				fmt.Println("Conversion completed successfully")
+			storeType, err := cmd.Flags().GetString("storetype")
+			if err != nil {
+				return err
 			}
+			storeName, err := cmd.Flags().GetString("storename")
+			if err != nil {
+				return err
+			}
+			outputPath, err := cmd.Flags().GetString("output")
+			if err != nil {
+				return err
+			}
+			err = converter.ConvertSecret(inputPath, storeType, storeName, outputPath)
+			if err != nil {
+				return err
+			}
+			fmt.Println("Conversion completed successfully")
 			return nil
 		},
 	}
 
 	cmd.Flags().StringP("input", "i", "", "Input path of corev1 secret file (required)")
-	cmd.Flags().StringP("output", "o", "", "Output path external secret file (required)")
-	cmd.Flags().StringP("store", "s", "ClusterSecretStore", "Store type (optional)")
+	cmd.Flags().StringP("storetype", "s", "ClusterSecretStore", "Store type (optional)")
 	cmd.Flags().StringP("storename", "n", "", "Store name (required)")
-	cmd.Flags().String("namespace", "default", "External namespace (optional)")
-	cmd.Flags().String("secret-name", "", "Secret name (optional)")
-	cmd.Flags().Bool("verbose", false, "Enable verbose output (optional)")
+	cmd.Flags().String("output", "o", "Output path external secret file (optional)")
 
-	cmd.MarkFlagRequired("input")
-	cmd.MarkFlagRequired("output")
-	cmd.MarkFlagRequired("storename")
+	err := cmd.MarkFlagRequired("input")
+	if err != nil {
+		return nil
+	}
 
 	return cmd
 }
@@ -75,9 +78,9 @@ func extSecretGenCmd() *cobra.Command {
 func versionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
-		Short: "Print the version number of sercert2extsecret",
+		Short: "Print the version number of secret2es",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("sercert2extsecret version %s\n", version)
+			fmt.Printf("secret2es version %s\n", version)
 			fmt.Printf("Built at %s\n", buildTime)
 		},
 	}
