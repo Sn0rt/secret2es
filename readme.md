@@ -1,6 +1,6 @@
 # secret2es
 
-A tool to convert Kubernetes core v1 Secrets to External Secrets.
+This tool allows administrators to migrate secrets originally managed by [argocd-vault-plugin](https://argocd-vault-plugin.readthedocs.io/en/stable/) to [external-secrets](https://github.com/external-secrets/external-secrets) for continued maintenance.
 
 ## Usage
 
