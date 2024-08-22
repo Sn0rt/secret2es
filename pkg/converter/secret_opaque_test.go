@@ -143,6 +143,87 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "opaque type secret with path <% ENV %> and mutilate property",
+			inputSecret: UnstructuredSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "input1",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Data: map[string]string{
+					"dist":   "<dist-name-of-linux>",
+					"user":   "<github-username>",
+					"passwd": "<github-passwd>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "input1",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "input1",
+						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+					},
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "test",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "dist",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "ubuntu-22.04-foo",
+								Property: "dist-name-of-linux",
+							},
+						},
+						{
+							SecretKey: "user",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "ubuntu-22.04-foo",
+								Property: "github-username",
+							},
+						},
+						{
+							SecretKey: "passwd",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "ubuntu-22.04-foo",
+								Property: "github-passwd",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

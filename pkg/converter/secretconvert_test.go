@@ -59,6 +59,8 @@ metadata:
 type: Opaque
 data:
   dist: <dist-name-of-linux>
+  user: <user-name-of-github>
+  passwd: <token>
 ---
 apiVersion: v1
 kind: ConfigMap
