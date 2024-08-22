@@ -32,7 +32,8 @@ func ConvertSecret(inputFile, storeType, storeName string, outputPath string) er
 		}
 
 		if outputPath == "" {
-			fmt.Printf("%s\n", yamlData)
+			fmt.Printf("---\n")
+			fmt.Printf("%s", yamlData)
 		} else {
 			err = os.WriteFile(outputPath, yamlData, 0644)
 			if err != nil {

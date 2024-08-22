@@ -16,7 +16,7 @@ COPY . .
 # Build the application
 ARG VERSION
 ARG BUILD_TIME
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X cmd.version=${VERSION} -X cmd.buildTime=${BUILD_TIME}" -o sercert2extsecret
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X cmd.version=${VERSION} -X cmd.buildTime=${BUILD_TIME}" -o secert2es
 
 # Final stage
 FROM alpine:3.14

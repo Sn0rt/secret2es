@@ -34,7 +34,7 @@ func setupAndExecute() error {
 
 func extSecretGenCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "extsecret-gen",
+		Use:   "es-gen",
 		Short: "Generate external secrets from corev1 secrets",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			inputPath, err := cmd.Flags().GetString("input")
@@ -57,7 +57,6 @@ func extSecretGenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println("Conversion completed successfully")
 			return nil
 		},
 	}
@@ -65,7 +64,7 @@ func extSecretGenCmd() *cobra.Command {
 	cmd.Flags().StringP("input", "i", "", "Input path of corev1 secret file (required)")
 	cmd.Flags().StringP("storetype", "s", "ClusterSecretStore", "Store type (optional)")
 	cmd.Flags().StringP("storename", "n", "", "Store name (required)")
-	cmd.Flags().String("output", "o", "Output path external secret file (optional)")
+	cmd.Flags().String("output", "", "Output path external secret file (optional)")
 
 	err := cmd.MarkFlagRequired("input")
 	if err != nil {
