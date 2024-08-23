@@ -7,4 +7,9 @@ const (
 	NotSupportedStoreType                = "illegal store type: %s"
 	NotSupportedSecretDataBothStringData = "secret support both Data and stringData: %s"
 	NotSupportedSecretData               = "secret support only Data or stringData: %s"
+	NotSupportedSecretDataEmpty          = "secret data is empty: %s"
+)
+
+const (
+	illegalVaultPath = "illegal vault path: %s"
 )

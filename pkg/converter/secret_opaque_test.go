@@ -1,8 +1,10 @@
 package converter
 
 import (
+	"fmt"
 	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
@@ -16,7 +18,31 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 		expectExternalSecret esv1beta1.ExternalSecret
 		store                esv1beta1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
+		err                  error
 	}{
+		{
+			name: "empty opaque type secret",
+			inputSecret: UnstructuredSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "input1",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			err: fmt.Errorf(NotSupportedSecretDataEmpty, "input1"),
+		},
 		{
 			name: "simple opaque type secret",
 			inputSecret: UnstructuredSecret{
@@ -144,7 +170,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 			},
 		},
 		{
-			name: "opaque type secret with path <% ENV %> and mutilate property",
+			name: "opaque type secret with path <% ENV %> and multiple property",
 			inputSecret: UnstructuredSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
@@ -311,6 +337,95 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "opaque type secret with path <% ENV %> and multiple stringData",
+			inputSecret: UnstructuredSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "string-data-multiple-example",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"sn0rt.github.io.default.access_key": "< USER_ACCESS_KEY >",
+					"sn0rt.github.io.default.secret_key": "<USER_SECRET_KEY>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-b",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "string-data-multiple-example",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "tenant-b",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "USER_ACCESS_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "ubuntu-22.04-foo",
+								Property: "USER_ACCESS_KEY",
+							},
+						},
+						{
+							SecretKey: "USER_SECRET_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "ubuntu-22.04-foo",
+								Property: "USER_SECRET_KEY",
+							},
+						},
+					},
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "string-data-multiple-example",
+						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Annotations: map[string]string{
+									"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
+								},
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyMerge,
+							Data: map[string]string{
+								"sn0rt.github.io.default.access_key": "\"{{ .USER_ACCESS_KEY }}\"",
+								"sn0rt.github.io.default.secret_key": "\"{{ .USER_SECRET_KEY }}\"",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -320,11 +435,16 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 			}
 			externalSecret, err := generateOpaqueSecret(tt.inputSecret, tt.store.Kind, tt.store.Name)
 			if err != nil {
-				t.Errorf("generateOpaqueSecret() returned an unexpected error: got: %v", err)
-			}
-			externalSecret.Status = esv1beta1.ExternalSecretStatus{}
-			if diff := cmp.Diff(externalSecret, &tt.expectExternalSecret); diff != "" {
-				t.Errorf("Mismatch (-want +got):\n%s", diff)
+				if err == tt.err {
+					t.Errorf("generateOpaqueSecret() returned an unexpected error: got: %v, want: %v", err, tt.err)
+				}
+			} else {
+				externalSecret.Status = esv1beta1.ExternalSecretStatus{}
+				if diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(func(a, b esv1beta1.ExternalSecretData) bool {
+					return a.SecretKey > b.SecretKey
+				})); diff != "" {
+					t.Errorf("Mismatch (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}

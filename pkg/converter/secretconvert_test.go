@@ -108,6 +108,17 @@ stringData:
     user = < USER >
     password = <MYSQL_PASSWD>
     port = 4000
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: simple
+  annotations:
+    avp.kubernetes.io/path: "secret/data/<% ENV %>-foo"
+type: Opaque
+stringData:
+  sn0rt.github.io.default.access_key: < USER_ACCESS_KEY >
+  sn0rt.github.io.default.secret_key: <USER_SECRET_KEY>
 `),
 		},
 	}

@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -68,6 +69,57 @@ func TestResolved(t *testing.T) {
 			out := resolved(tt.originalString)
 			if out != tt.expectString {
 				t.Errorf("resolved() returned an unexpected string: got: %s, want: %s", out, tt.expectString)
+			}
+		})
+	}
+}
+
+func TestGetVaultSecretKey(t *testing.T) {
+	tests := []struct {
+		desc       string
+		secretPath string
+		expectKey  string
+		err        error
+	}{
+		{
+			desc:       "invalid secret path",
+			secretPath: "secret/foo/bar",
+			expectKey:  "",
+			err:        fmt.Errorf(illegalVaultPath, "secret/foo/bar"),
+		},
+		{
+			desc:       "path",
+			secretPath: "secret/data/bar",
+			expectKey:  "bar",
+			err:        nil,
+		},
+		{
+			desc:       "path",
+			secretPath: "secret/data/bar/foo",
+			expectKey:  "bar/foo",
+			err:        nil,
+		},
+		{
+			desc:       "path",
+			secretPath: "kv-app/dep1/data/bar/foo",
+			expectKey:  "bar/foo",
+			err:        nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			out, err := getVaultSecretKey(tt.secretPath)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("test case name %s", tt.desc)
+					t.Errorf("getVaultSecretKey() returned an unexpected error: got: %v, want: %v", err, tt.err)
+				}
+			} else {
+				if out != tt.expectKey {
+					t.Errorf("test case name %s", tt.desc)
+					t.Errorf("getVaultSecretKey() returned an unexpected string: got: %s, want: %s", out, tt.expectKey)
+				}
 			}
 		})
 	}

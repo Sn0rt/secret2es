@@ -14,8 +14,7 @@ var (
 )
 
 const (
-	opaqueSubType = iota
-	opaqueDataType
+	opaqueDataType = iota
 	opaqueStringDataType
 )
 
@@ -23,6 +22,8 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 	var currentSecretOpaqueSubType int
 	if len(inputSecret.Data) != 0 && len(inputSecret.StringData) != 0 {
 		return nil, fmt.Errorf(NotSupportedSecretDataBothStringData, inputSecret.Name)
+	} else if len(inputSecret.Data) == 0 && len(inputSecret.StringData) == 0 {
+		return nil, fmt.Errorf(NotSupportedSecretDataEmpty, inputSecret.Name)
 	} else if len(inputSecret.Data) != 0 {
 		currentSecretOpaqueSubType = opaqueDataType
 	} else {
@@ -33,9 +34,11 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 	var secretPath = inputSecret.Annotations["avp.kubernetes.io/path"]
 	var resolvedSecretPath = resolved(secretPath)
 
-	// bugfix: should split with 'data'
-	var secretPathList = strings.Split(resolvedSecretPath, "/")
-	var vaultSecretKey = secretPathList[len(secretPathList)-1]
+	// get the vault secret key
+	var vaultSecretKey, err = getVaultSecretKey(resolvedSecretPath)
+	if err != nil {
+		return nil, fmt.Errorf(illegalVaultPath, resolvedSecretPath)
+	}
 
 	// new resolvedAnnotations
 	var resolvedAnnotations = make(map[string]string)
@@ -93,7 +96,6 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 			propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
 			for _, s := range propertyFromSecretData {
 				output := strings.TrimSpace(fmt.Sprintf("%s", s[1]))
-				fmt.Println(output)
 				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
 					SecretKey: fmt.Sprintf("%s", output),
 					RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{

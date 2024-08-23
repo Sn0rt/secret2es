@@ -61,8 +61,8 @@ func convertSecret2ExtSecret(inputSecret UnstructuredSecret, storeType, storeNam
 	switch inputSecret.Type {
 	case corev1.SecretTypeOpaque:
 		return generateOpaqueSecret(inputSecret, storeType, storeName)
-	case corev1.SecretTypeDockerConfigJson:
 	case corev1.SecretTypeBasicAuth:
+	case corev1.SecretTypeDockerConfigJson:
 	case corev1.SecretTypeTLS:
 	}
 

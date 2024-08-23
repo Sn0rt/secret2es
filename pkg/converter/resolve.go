@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -20,4 +21,23 @@ func resolved(originalString string) string {
 		}
 	}
 	return originalString
+}
+
+func getVaultSecretKey(secretPath string) (string, error) {
+	parts := strings.Split(secretPath, "/")
+
+	index := -1
+	for i, part := range parts {
+		if part == "data" {
+			index = i
+			break
+		}
+	}
+
+	if index == -1 || index+1 >= len(parts) {
+		return "", fmt.Errorf(illegalVaultPath, secretPath)
+	}
+
+	result := strings.Join(parts[index+1:], "/")
+	return result, nil
 }
