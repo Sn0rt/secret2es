@@ -267,7 +267,12 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					},
 				},
 				StringData: map[string]string{
-					"mylogin.conf": "    [client]\n    host = example.com\n    user = < USER >\n    password = <MYSQL_PASSWD>\n    port = 4000",
+					"mylogin.conf": `
+[client]
+host = example.com
+user = < USER >
+password = <MYSQL_PASSWD>
+port = 4000`,
 				},
 			},
 			store: esv1beta1.SecretStoreRef{
@@ -330,7 +335,12 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 							},
 							MergePolicy: esv1beta1.MergePolicyMerge,
 							Data: map[string]string{
-								"mylogin.conf": "    [client]\n    host = example.com\n    user = \"{{ .USER }}\"\n    password = \"{{ .MYSQL_PASSWD }}\"\n    port = 4000",
+								"mylogin.conf": `
+[client]
+host = example.com
+"user = {{ .USER }}"
+"password = {{ .MYSQL_PASSWD }}"
+port = 4000`,
 							},
 						},
 					},
@@ -356,6 +366,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 				StringData: map[string]string{
 					"sn0rt.github.io.default.access_key": "< USER_ACCESS_KEY >",
 					"sn0rt.github.io.default.secret_key": "<USER_SECRET_KEY>",
+					"sn0rt.github.io.default.cmt":        "sn0rt-<USER_SECRET_KEY>",
 				},
 			},
 			store: esv1beta1.SecretStoreRef{
@@ -418,8 +429,9 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 							},
 							MergePolicy: esv1beta1.MergePolicyMerge,
 							Data: map[string]string{
-								"sn0rt.github.io.default.access_key": "\"{{ .USER_ACCESS_KEY }}\"",
-								"sn0rt.github.io.default.secret_key": "\"{{ .USER_SECRET_KEY }}\"",
+								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
+								"sn0rt.github.io.default.secret_key": `"{{ .USER_SECRET_KEY }}"`,
+								"sn0rt.github.io.default.cmt":        `"sn0rt-{{ .USER_SECRET_KEY }}"`,
 							},
 						},
 					},

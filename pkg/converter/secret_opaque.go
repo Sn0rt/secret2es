@@ -96,21 +96,22 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 			propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
 			for _, s := range propertyFromSecretData {
 				output := strings.TrimSpace(fmt.Sprintf("%s", s[1]))
-				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
-					SecretKey: fmt.Sprintf("%s", output),
-					RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-						Key:      vaultSecretKey,
-						Property: output,
-					},
-				})
+				// if secret key not found in externalSecretData then append to slice
+				if !contains(externalSecretData, output) {
+					externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
+						SecretKey: fmt.Sprintf("%s", output),
+						RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							Key:      vaultSecretKey,
+							Property: output,
+						},
+					})
+				}
 			}
-
-			var replaceFunc = func(fileContent string) string {
-				return captureFromFile.ReplaceAllStringFunc(fileContent, func(s string) string {
-					return fmt.Sprintf("\"{{ .%s }}\"", strings.TrimSpace(s[1:len(s)-1]))
-				})
+			newFileContentWithoutQuote, err := resolveAngleBrackets(fileContent)
+			if err != nil {
+				return nil, err
 			}
-			var newFileContent = captureFromFile.ReplaceAllStringFunc(fileContent, replaceFunc)
+			var newFileContent = addQuotesCurlyBraces(newFileContentWithoutQuote)
 			templateData[fileName] = newFileContent
 		}
 
@@ -150,4 +151,13 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 	}
 
 	return nil, fmt.Errorf("error converting secret to external secret: %s", NotSupportedSecretData)
+}
+
+func contains(data []esv1beta1.ExternalSecretData, output string) bool {
+	for _, d := range data {
+		if d.SecretKey == output {
+			return true
+		}
+	}
+	return false
 }

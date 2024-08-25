@@ -135,13 +135,10 @@ stringData:
 				if err != nil {
 					t.Errorf("convertSecret2ExtSecret() returned an unexpected error: got: %v", err)
 				}
-
-				yamlData, err := yaml.Marshal(externalSecret)
+				_, err = yaml.Marshal(externalSecret)
 				if err != nil {
 					t.Errorf("yaml.Marshal() returned an unexpected error: got: %v", err)
 				}
-
-				t.Logf("\n%s\n", yamlData)
 			}
 		})
 	}

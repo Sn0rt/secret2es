@@ -11,5 +11,15 @@ const (
 )
 
 const (
+	NotBasicAuthWithData          = "secret support only stringData: %s"
+	NotBasicAuthWithEmptyUsername = "basic auth secret with empty username: %s"
+	NotBasicAuthWithEmptyPassword = "basic auth secret with empty password: %s"
+)
+
+const (
+	FileContentAngleBracketsParseSyntaxError = "syntax error: %s"
+)
+
+const (
 	illegalVaultPath = "illegal vault path: %s"
 )

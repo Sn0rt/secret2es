@@ -124,3 +124,154 @@ func TestGetVaultSecretKey(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveAngleBrackets(t *testing.T) {
+	tests := []struct {
+		originalString string
+		expectString   string
+		err            error
+	}{
+		{
+			originalString: "test-ubuntu-20.04-linux",
+			expectString:   "test-ubuntu-20.04-linux",
+		},
+		{
+			originalString: "<A>-linux",
+			expectString:   "{{ .A }}-linux",
+		},
+		{
+			originalString: "<   A   >-linux",
+			expectString:   "{{ .A }}-linux",
+		},
+		{
+			originalString: "<A    >-linux",
+			expectString:   "{{ .A }}-linux",
+		},
+		{
+			originalString: "<   A>-linux",
+			expectString:   "{{ .A }}-linux",
+		},
+		{
+			originalString: "sn0rt-<A>-linux",
+			expectString:   "sn0rt-{{ .A }}-linux",
+		},
+		{
+			originalString: "sn0rt-<A>-<B>",
+			expectString:   "sn0rt-{{ .A }}-{{ .B }}",
+		},
+		{
+			originalString: "sn0rt-<A",
+			expectString:   "sn0rt-<A",
+			err:            fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `syntax error: unclosed '<'`),
+		},
+		{
+			originalString: "<A>-<B> <C>",
+			expectString:   "{{ .A }}-{{ .B }} {{ .C }}",
+		},
+		{
+			originalString: "sn0rt-<A>-<B> <C>",
+			expectString:   "sn0rt-{{ .A }}-{{ .B }} {{ .C }}",
+		},
+		{
+			originalString: "<MYSQL_PASSWD>",
+			expectString:   "{{ .MYSQL_PASSWD }}",
+		},
+		{
+			originalString: "password = <MYSQL_PASSWD>",
+			expectString:   "password = {{ .MYSQL_PASSWD }}",
+		},
+		{
+			originalString: `
+[client]
+host = example.com
+user = < USER >
+password = <MYSQL_PASSWD>
+port = 4000`,
+			expectString: `
+[client]
+host = example.com
+user = {{ .USER }}
+password = {{ .MYSQL_PASSWD }}
+port = 4000`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.originalString, func(t *testing.T) {
+			out, err := resolveAngleBrackets(tt.originalString)
+			if err != nil {
+				if err.Error() != tt.err.Error() {
+					t.Errorf("resolveAngleBrackets() returned an unexpected error: got: %v, want: %v", err, tt.err)
+				}
+			} else {
+				if out != tt.expectString {
+					t.Errorf("resolveAngleBrackets() returned an unexpected string: got: %s, want: %s", out, tt.expectString)
+				}
+			}
+		})
+	}
+}
+
+func TestAddQuotesForCurlyBraces(t *testing.T) {
+	tests := []struct {
+		originalString string
+		expectString   string
+		err            error
+	}{
+		{
+			originalString: "test-ubuntu-20.04-linux",
+			expectString:   "test-ubuntu-20.04-linux",
+		},
+		{
+			originalString: "{{ .A }}-linux",
+			expectString:   `"{{ .A }}-linux"`,
+		},
+		{
+			originalString: `sn0rt-{{ .A }}-linux`,
+			expectString:   `"sn0rt-{{ .A }}-linux"`,
+		},
+		{
+			originalString: `sn0rt-{{ .A }}-{{ .B }}`,
+			expectString:   `"sn0rt-{{ .A }}-{{ .B }}"`,
+		},
+		{
+			originalString: `{{ .A }}-{{ .B }} {{ .C }}`,
+			expectString:   `"{{ .A }}-{{ .B }} {{ .C }}"`,
+		},
+		{
+			originalString: `sn0rt-{{ .A }}-{{ .B }} {{ .C }}`,
+			expectString:   `"sn0rt-{{ .A }}-{{ .B }} {{ .C }}"`,
+		},
+		{
+			originalString: `{{ .MYSQL_PASSWD }}`,
+			expectString:   `"{{ .MYSQL_PASSWD }}"`,
+		},
+		{
+			originalString: `password = {{ .MYSQL_PASSWD }}`,
+			expectString:   `"password = {{ .MYSQL_PASSWD }}"`,
+		},
+		{
+			originalString: `
+[client]
+host = example.com
+user = {{ .USER }}
+password = {{ .MYSQL_PASSWD }}
+port = 4000`,
+			expectString: `
+[client]
+host = example.com
+"user = {{ .USER }}"
+"password = {{ .MYSQL_PASSWD }}"
+port = 4000`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.originalString, func(t *testing.T) {
+			out := addQuotesCurlyBraces(tt.originalString)
+			if out != tt.expectString {
+				t.Errorf("resolveAngleBrackets() returned an unexpected string: got: %v, want: %s", out, tt.expectString)
+			}
+		})
+	}
+}

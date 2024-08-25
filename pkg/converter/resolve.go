@@ -41,3 +41,65 @@ func getVaultSecretKey(secretPath string) (string, error) {
 	result := strings.Join(parts[index+1:], "/")
 	return result, nil
 }
+
+func resolveAngleBrackets(s string) (string, error) {
+	var result strings.Builder
+	var temp strings.Builder
+	inBracket := false
+	lastCharWasSpace := false
+
+	for _, char := range s {
+		switch char {
+		case '<':
+			if inBracket {
+				return s, fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `nested or unclosed '<'`)
+			}
+			inBracket = true
+			result.WriteString("{{ .")
+			lastCharWasSpace = false
+		case '>':
+			if !inBracket {
+				return s, fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `unpaired '>'`)
+			}
+			inBracket = false
+			trimmedVariable := strings.TrimSpace(temp.String())
+			result.WriteString(trimmedVariable)
+			result.WriteString(" }}")
+			temp.Reset()
+			lastCharWasSpace = false
+		case ' ':
+			if inBracket {
+				temp.WriteRune(char)
+			} else if !lastCharWasSpace {
+				result.WriteRune(char)
+				lastCharWasSpace = true
+			}
+		default:
+			if inBracket {
+				temp.WriteRune(char)
+			} else {
+				result.WriteRune(char)
+			}
+			lastCharWasSpace = false
+		}
+	}
+
+	if inBracket {
+		return s, fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `syntax error: unclosed '<'`)
+	}
+
+	return result.String(), nil
+}
+
+func addQuotesCurlyBraces(s string) string {
+	re := regexp.MustCompile(`(?m)^.*\{\{.*\}\}.*$`)
+
+	result := re.ReplaceAllStringFunc(s, func(line string) string {
+		if strings.HasPrefix(line, `"`) && strings.HasSuffix(line, `"`) {
+			return line
+		}
+		return `"` + line + `"`
+	})
+
+	return result
+}
