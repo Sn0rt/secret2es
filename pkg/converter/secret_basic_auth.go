@@ -45,19 +45,22 @@ func generateBasicAuthSecret(inputSecret UnstructuredSecret, storeType, storeNam
 		propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
 		for _, s := range propertyFromSecretData {
 			output := strings.TrimSpace(fmt.Sprintf("%s", s[1]))
-			externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
-				SecretKey: fmt.Sprintf("%s", output),
-				RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-					Key:      vaultSecretKey,
-					Property: output,
-				},
-			})
+			if !contains(externalSecretData, output) {
+				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
+					SecretKey: fmt.Sprintf("%s", output),
+					RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+						Key:      vaultSecretKey,
+						Property: output,
+					},
+				})
+			}
 		}
 
-		var newFileContent, err = resolveAngleBrackets(fileContent)
+		var newFileContentWithout, err = resolveAngleBrackets(fileContent)
 		if err != nil {
 			return nil, err
 		}
+		var newFileContent = addQuotesCurlyBraces(newFileContentWithout)
 		templateData[fileName] = newFileContent
 	}
 
