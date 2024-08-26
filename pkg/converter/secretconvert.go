@@ -66,6 +66,7 @@ func convertSecret2ExtSecret(inputSecret UnstructuredSecret, storeType, storeNam
 	case corev1.SecretTypeDockerConfigJson:
 		return genEsByDockerConfigJSON(inputSecret, storeType, storeName)
 	case corev1.SecretTypeTLS:
+		return generateEsByTLS(inputSecret, storeType, storeName)
 	}
 
 	return nil, fmt.Errorf(NotImplSecretType, inputSecret.Type, inputSecret.Name)

@@ -30,3 +30,8 @@ const (
 	ErrorDockerOnlyAcceptOne  = "kubernetes.io/dockerconfigjson type should only accept one key %s"
 	NotDockerConfigJSONData   = "kubernetes.io/dockerconfigjson type should not allow set Data Fields %s"
 )
+
+// for tls type
+const (
+	ErrorTLSNotAllowDataField = "kubernetes.io/tls type should not allow set Data Fields %s"
+)
