@@ -1,0 +1,30 @@
+name: Test External Secrets with Vault
+
+on:
+  push:
+    branches:
+      - 'e2e-*'
+  pull_request:
+
+jobs:
+  test-external-secrets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Kubernetes cluster
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.21.0'
+
+      - name: Install External Secrets
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/external-secrets/external-secrets/v0.10.0/deploy/crds/bundle.yaml
+          kubectl rollout status deployment/external-secrets -n external-secrets
+
+      - name: use helm to install vault
+        run: |
+          helm repo add hashicorp https://helm.releases.hashicorp.com
+          helm install vault hashicorp/vault --set "server.dev.enabled=true"
