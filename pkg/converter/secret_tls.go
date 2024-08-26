@@ -6,29 +6,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func generateEsByTLS(inputSecret UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByTLS(inputSecret *UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
 	if len(inputSecret.StringData) != 0 {
-		return nil, fmt.Errorf(ErrorTLSNotAllowDataField, inputSecret.Name)
+		return nil, fmt.Errorf(ErrTLSNotAllowDataField, inputSecret.Name)
 	}
 
-	// get the secret of vault path
-	var secretPath = inputSecret.Annotations["avp.kubernetes.io/path"]
-	var resolvedSecretPath = resolved(secretPath)
-
 	// get the vault secret key
-	var vaultSecretKey, err = getVaultSecretKey(resolvedSecretPath)
+	var vaultSecretKey, err = getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
 	if err != nil {
 		return nil, fmt.Errorf(illegalVaultPath, resolvedSecretPath)
 	}
-
-	// new resolvedAnnotations
-	var resolvedAnnotations = make(map[string]string)
-	for annK, annV := range inputSecret.Annotations {
-		if annK != "avp.kubernetes.io/path" {
-			resolvedAnnotations[annK] = annV
-		}
-	}
-	resolvedAnnotations["avp.kubernetes.io/path"] = resolvedSecretPath
 
 	// for specific secret opaque sub-type
 	var externalSecretData []esv1beta1.ExternalSecretData
@@ -55,7 +42,7 @@ func generateEsByTLS(inputSecret UnstructuredSecret, storeType, storeName string
 			Name:        inputSecret.Name,
 			Namespace:   inputSecret.Namespace,
 			Labels:      inputSecret.Labels,
-			Annotations: resolvedAnnotations,
+			Annotations: inputSecret.Annotations,
 		},
 		Spec: esv1beta1.ExternalSecretSpec{
 			SecretStoreRef: esv1beta1.SecretStoreRef{

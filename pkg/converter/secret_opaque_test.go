@@ -41,7 +41,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			err: fmt.Errorf(NotSupportedSecretDataEmpty, "input1"),
+			err: fmt.Errorf(ErrCommonNotAcceptNeitherSecretDataAndData, "input1"),
 		},
 		{
 			name: "simple opaque type secret",
@@ -445,10 +445,10 @@ port = 4000`,
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := generateOpaqueSecret(tt.inputSecret, tt.store.Kind, tt.store.Name)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name)
 			if err != nil {
 				if err == tt.err {
-					t.Errorf("generateOpaqueSecret() returned an unexpected error: got: %v, want: %v", err, tt.err)
+					t.Errorf("generateEsByOpaqueSecret() returned an unexpected error: got: %v, want: %v", err, tt.err)
 				}
 			} else {
 				externalSecret.Status = esv1beta1.ExternalSecretStatus{}

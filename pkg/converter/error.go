@@ -1,37 +1,34 @@
 package converter
 
+// for secret common check
 const (
-	NotSetAVPAnnotations                 = "not set AVP annotations, secret: %s"
-	NotEmptyAnnotations                  = "not set AVP annotations, secret: %s"
-	NotImplSecretType                    = "not impl %s secret type: secret: %s"
-	NotSupportedStoreType                = "illegal store type: %s"
-	NotSupportedSecretDataBothStringData = "secret support both Data and stringData: %s"
-	NotSupportedSecretData               = "secret support only Data or stringData: %s"
-	NotSupportedSecretDataEmpty          = "secret data is empty: %s"
+	ErrCommonNotEmptyAnnotations               = "not empty annotations: %s"
+	ErrCommonNotFoundAVPPath                   = "not found avp.kubernetes.io/path: %s"
+	ErrCommonNotAcceptBothSecretDataAndData    = "not accept both Data and stringData Fields %s"
+	ErrCommonNotAcceptNeitherSecretDataAndData = "not accept neither Data and stringData Fields %s"
+	NotImplSecretType                          = "not impl %s secret type: secret: %s"
+	illegalStoreType                           = "illegal store type: %s"
+	illegalVaultPath                           = "illegal vault path: %s"
+	NotSupportedSecretData                     = "secret support only Data or stringData: %s"
+	FileContentAngleBracketsParseSyntaxError   = "template syntax error: %s"
 )
 
 const (
-	NotBasicAuthWithData          = "secret support only stringData: %s"
-	NotBasicAuthWithEmptyUsername = "basic auth secret with empty username: %s"
-	NotBasicAuthWithEmptyPassword = "basic auth secret with empty password: %s"
+	ErrOpaqueNotAllowDataAndStringData      = "kubernetes.io/opaque type should not allow set Data and stringData Fields %s"
+	ErrOpaqueNotAllowEmptyDataAndStringData = "kubernetes.io/opaque type should not allow empty Data and stringData Fields %s"
 )
 
 const (
-	FileContentAngleBracketsParseSyntaxError = "syntax error: %s"
+	ErrBasicAuthNotAllowDataField = "kubernetes.io/basic-auth type should not allow set Data Fields %s"
+	ErrBasicAuthWithEmptyUsername = "basic auth secret with empty username: %s"
+	ErrBasicAuthWithEmptyPassword = "basic auth secret with empty password: %s"
 )
 
 const (
-	illegalVaultPath = "illegal vault path: %s"
+	ErrDockerConfigJsonAcceptOnlyDataFields = "kubernetes.io/dockerconfigjson type should only accept set Data Fields %s"
+	ErrDockerConfigJsonAcceptOnlyOneValue   = "kubernetes.io/dockerconfigjson type should only accept one value %s"
 )
 
-// for dockerconfigjson type
 const (
-	ErrorDockerConfigJSONData = "error unmarshal dockerconfigjson data: %s"
-	ErrorDockerOnlyAcceptOne  = "kubernetes.io/dockerconfigjson type should only accept one key %s"
-	NotDockerConfigJSONData   = "kubernetes.io/dockerconfigjson type should not allow set Data Fields %s"
-)
-
-// for tls type
-const (
-	ErrorTLSNotAllowDataField = "kubernetes.io/tls type should not allow set Data Fields %s"
+	ErrTLSNotAllowDataField = "kubernetes.io/tls type should not allow set Data Fields %s"
 )

@@ -8,35 +8,22 @@ import (
 	"strings"
 )
 
-func generateBasicAuthSecret(inputSecret UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByBasicAuthSecret(inputSecret *UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
 	if len(inputSecret.Data) != 0 {
-		return nil, fmt.Errorf(NotBasicAuthWithData, inputSecret.Name)
+		return nil, fmt.Errorf(ErrBasicAuthNotAllowDataField, inputSecret.Name)
 	}
 	if inputSecret.StringData[corev1.BasicAuthUsernameKey] == "" {
-		return nil, fmt.Errorf(NotBasicAuthWithEmptyUsername, inputSecret.Name)
+		return nil, fmt.Errorf(ErrBasicAuthWithEmptyUsername, inputSecret.Name)
 	}
 	if inputSecret.StringData[corev1.BasicAuthPasswordKey] == "" {
-		return nil, fmt.Errorf(NotBasicAuthWithEmptyPassword, inputSecret.Name)
+		return nil, fmt.Errorf(ErrBasicAuthWithEmptyPassword, inputSecret.Name)
 	}
 
-	// resolve the secret path
-	var secretPath = inputSecret.Annotations["avp.kubernetes.io/path"]
-	var resolvedSecretPath = resolved(secretPath)
-
 	// get vault secret key
-	var vaultSecretKey, err = getVaultSecretKey(resolvedSecretPath)
+	var vaultSecretKey, err = getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
 	if err != nil {
 		return nil, fmt.Errorf(illegalVaultPath, resolvedSecretPath)
 	}
-
-	// new resolvedAnnotations
-	var resolvedAnnotations = make(map[string]string)
-	for annK, annV := range inputSecret.Annotations {
-		if annK != "avp.kubernetes.io/path" {
-			resolvedAnnotations[annK] = annV
-		}
-	}
-	resolvedAnnotations["avp.kubernetes.io/path"] = resolvedSecretPath
 
 	var externalSecretData []esv1beta1.ExternalSecretData
 	var templateData = map[string]string{}
@@ -44,10 +31,10 @@ func generateBasicAuthSecret(inputSecret UnstructuredSecret, storeType, storeNam
 	for fileName, fileContent := range inputSecret.StringData {
 		propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
 		for _, s := range propertyFromSecretData {
-			output := strings.TrimSpace(fmt.Sprintf("%s", s[1]))
+			output := strings.TrimSpace(string(s[1]))
 			if !contains(externalSecretData, output) {
 				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
-					SecretKey: fmt.Sprintf("%s", output),
+					SecretKey: output,
 					RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 						Key:      vaultSecretKey,
 						Property: output,
@@ -73,7 +60,7 @@ func generateBasicAuthSecret(inputSecret UnstructuredSecret, storeType, storeNam
 			Name:        inputSecret.Name,
 			Namespace:   inputSecret.Namespace,
 			Labels:      inputSecret.ObjectMeta.Labels,
-			Annotations: resolvedAnnotations,
+			Annotations: inputSecret.Annotations,
 		},
 		Spec: esv1beta1.ExternalSecretSpec{
 			SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -87,7 +74,7 @@ func generateBasicAuthSecret(inputSecret UnstructuredSecret, storeType, storeNam
 				Template: &esv1beta1.ExternalSecretTemplate{
 					Type: corev1.SecretTypeBasicAuth,
 					Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-						Annotations: resolvedAnnotations,
+						Annotations: inputSecret.Annotations,
 						Labels:      inputSecret.ObjectMeta.Labels,
 					},
 					MergePolicy: esv1beta1.MergePolicyMerge,
