@@ -1,0 +1,115 @@
+---
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input1
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: kubernetes.io/basic-auth
+stringData:
+  username: <TEST_USERNAME>
+  password: <TEST_PASSWORD>
+  host: "localhost.local"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input2
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+data:
+  dist: <TEST_DIST_LINUX> #version
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input3
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+data:
+  dist: <TEST_DIST_LINUX> #DIST_OF_NAME_LINUX
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input4
+  annotations:
+    avp.kubernetes.io/path: "secret/data/foo-test"
+type: Opaque
+data:
+  dist: <TEST_DIST_LINUX> #DIST_OF_NAME_LINUX
+  user: <TEST_USERNAME> #USER_NAME_OF_GITHUB
+  password: <TEST_PASSWORD>
+  host: "localhost.local"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input5
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+stringData:
+  mylogin.conf: |
+    [client]
+    host = example.com
+    user = <MYSQL_USER>
+    password = <MYSQL_PASSWD>
+    port = 4000
+---
+# skip this one
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input6
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+stringData:
+  sn0rt.github.io.default.access_key: "VVNFUl9BQ0NFU1NfS0VZCg==" #USER_ACCESS_KEY
+  sn0rt.github.io.default.secret_key: "VVNFUl9TRUNSRVRfS0VZCg==" #USER_SECRET_KEY
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input6
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+stringData:
+  sn0rt.github.io.default.access_key: <ACCESS_KEY> #USER_ACCESS_KEY
+  sn0rt.github.io.default.secret_key: <SECRET_KEY> #USER_SECRET_KEY
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input7
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: kubernetes.io/tls
+data:
+  tls.crt: <TLS_CRT>
+  tls.key: <TLS_KEY>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input8
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: kubernetes.io/dockerconfigjson
+stringData:
+  .dockerconfigjson: |
+    {
+      "auths": {
+        "https://index.docker.io/v1": {
+          "auth": "<TEST_PASSWORD>"
+        },
+        "https://index.docker.io:8443/v1": {
+          "auth": "<TEST_PASSWORD>"
+        }      
+      }
+    }

@@ -9,7 +9,7 @@ import (
 )
 
 // ConvertSecret converts a Kubernetes Secret to an ExternalSecret
-func ConvertSecret(inputFile, storeType, storeName string, outputPath string) error {
+func ConvertSecret(inputFile, storeType, storeName string) error {
 	bytes, err := os.ReadFile(inputFile)
 	if err != nil {
 		return fmt.Errorf("error reading inputSecret file: %w", err)
@@ -22,7 +22,12 @@ func ConvertSecret(inputFile, storeType, storeName string, outputPath string) er
 
 	for _, inputSecret := range inputSecretList {
 		externalSecret, err := convertSecret2ExtSecret(inputSecret, storeType, storeName)
+		// handle error
 		if err != nil {
+			switch err.Error() {
+			case fmt.Errorf(ErrCommonNotIncludeAngleBrackets, inputSecret.Name).Error():
+				continue
+			}
 			return fmt.Errorf("error converting secret to external secret: %s", err.Error())
 		}
 
@@ -30,16 +35,8 @@ func ConvertSecret(inputFile, storeType, storeName string, outputPath string) er
 		if err != nil {
 			return fmt.Errorf("error encoding external secret: %w", err)
 		}
-
-		if outputPath == "" {
-			fmt.Printf("---\n")
-			fmt.Printf("%s", yamlData)
-		} else {
-			err = os.WriteFile(outputPath, yamlData, 0644)
-			if err != nil {
-				return fmt.Errorf("error writing external secret to file: %w", err)
-			}
-		}
+		fmt.Printf("---\n")
+		fmt.Printf("%s", yamlData)
 	}
 
 	return nil
@@ -87,5 +84,26 @@ func secretCommonVerify(inputSecret UnstructuredSecret) error {
 		fmt.Println("ErrCommonNotAcceptNeitherSecretDataAndData")
 		return fmt.Errorf(ErrCommonNotAcceptNeitherSecretDataAndData, inputSecret.Name)
 	}
+
+	var foundAngleBracketsData = false
+	for _, value := range inputSecret.Data {
+		if captureFromFile.MatchString(value) {
+			foundAngleBracketsData = true
+			break
+		}
+	}
+
+	var foundAngleBracketsStringData = false
+	for _, value := range inputSecret.StringData {
+		if captureFromFile.MatchString(value) {
+			foundAngleBracketsStringData = true
+			break
+		}
+	}
+
+	if !foundAngleBracketsData && !foundAngleBracketsStringData {
+		return fmt.Errorf(ErrCommonNotIncludeAngleBrackets, inputSecret.Name)
+	}
+
 	return nil
 }

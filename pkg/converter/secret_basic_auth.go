@@ -30,6 +30,9 @@ func generateEsByBasicAuthSecret(inputSecret *UnstructuredSecret, storeType, sto
 
 	for fileName, fileContent := range inputSecret.StringData {
 		propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
+		if len(propertyFromSecretData) == 0 {
+			continue
+		}
 		for _, s := range propertyFromSecretData {
 			output := strings.TrimSpace(string(s[1]))
 			if !contains(externalSecretData, output) {
@@ -63,6 +66,7 @@ func generateEsByBasicAuthSecret(inputSecret *UnstructuredSecret, storeType, sto
 			Annotations: inputSecret.Annotations,
 		},
 		Spec: esv1beta1.ExternalSecretSpec{
+			RefreshInterval: stopRefreshInterval,
 			SecretStoreRef: esv1beta1.SecretStoreRef{
 				Name: storeName,
 				Kind: storeType,
