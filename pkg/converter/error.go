@@ -23,3 +23,10 @@ const (
 const (
 	illegalVaultPath = "illegal vault path: %s"
 )
+
+// for dockerconfigjson type
+const (
+	ErrorDockerConfigJSONData = "error unmarshal dockerconfigjson data: %s"
+	ErrorDockerOnlyAcceptOne  = "kubernetes.io/dockerconfigjson type should only accept one key %s"
+	NotDockerConfigJSONData   = "kubernetes.io/dockerconfigjson type should not allow set Data Fields %s"
+)
