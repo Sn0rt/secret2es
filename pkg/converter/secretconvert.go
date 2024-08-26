@@ -46,28 +46,46 @@ func ConvertSecret(inputFile, storeType, storeName string, outputPath string) er
 }
 
 func convertSecret2ExtSecret(inputSecret UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
-	if inputSecret.Annotations == nil {
-		return nil, fmt.Errorf(NotEmptyAnnotations, inputSecret.Name)
-	} else {
-		if inputSecret.Annotations["avp.kubernetes.io/path"] == "" {
-			return nil, fmt.Errorf(NotSetAVPAnnotations, inputSecret.Name)
-		}
+	if err := secretCommonVerify(inputSecret); err != nil {
+		return nil, err
 	}
 
-	if storeType != SecretStoreType && storeType != ClusterSecretStoreType {
-		return nil, fmt.Errorf(NotSupportedStoreType, storeType)
+	if storeType != SecretStoreType &&
+		storeType != ClusterSecretStoreType {
+		return nil, fmt.Errorf(illegalStoreType, storeType)
 	}
+
+	// get the secret of vault path
+	var resolvedSecretPath = resolved(inputSecret.Annotations["avp.kubernetes.io/path"])
+	inputSecret.Annotations["avp.kubernetes.io/path"] = resolvedSecretPath
 
 	switch inputSecret.Type {
 	case corev1.SecretTypeOpaque:
-		return generateOpaqueSecret(inputSecret, storeType, storeName)
+		return generateEsByOpaqueSecret(&inputSecret, storeType, storeName)
 	case corev1.SecretTypeBasicAuth:
-		return generateBasicAuthSecret(inputSecret, storeType, storeName)
+		return generateEsByBasicAuthSecret(&inputSecret, storeType, storeName)
 	case corev1.SecretTypeDockerConfigJson:
-		return genEsByDockerConfigJSON(inputSecret, storeType, storeName)
+		return generateEsByDockerConfigJSON(&inputSecret, storeType, storeName)
 	case corev1.SecretTypeTLS:
-		return generateEsByTLS(inputSecret, storeType, storeName)
+		return generateEsByTLS(&inputSecret, storeType, storeName)
 	}
 
 	return nil, fmt.Errorf(NotImplSecretType, inputSecret.Type, inputSecret.Name)
+}
+
+func secretCommonVerify(inputSecret UnstructuredSecret) error {
+	if inputSecret.Annotations == nil {
+		return fmt.Errorf(ErrCommonNotEmptyAnnotations, inputSecret.Name)
+	}
+	if inputSecret.Annotations["avp.kubernetes.io/path"] == "" {
+		return fmt.Errorf(ErrCommonNotFoundAVPPath, inputSecret.Name)
+	}
+	if len(inputSecret.Data) != 0 && len(inputSecret.StringData) != 0 {
+		return fmt.Errorf(ErrCommonNotAcceptBothSecretDataAndData, inputSecret.Name)
+	}
+	if len(inputSecret.Data) == 0 && len(inputSecret.StringData) == 0 {
+		fmt.Println("ErrCommonNotAcceptNeitherSecretDataAndData")
+		return fmt.Errorf(ErrCommonNotAcceptNeitherSecretDataAndData, inputSecret.Name)
+	}
+	return nil
 }

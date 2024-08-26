@@ -99,8 +99,8 @@ stringData:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			inputSecretList, err := parseUnstructuredSecret(tt.input)
-			out, err := genEsByDockerConfigJSON(inputSecretList[0], tt.store.Kind, tt.store.Name)
+			inputSecretList, _ := parseUnstructuredSecret(tt.input)
+			out, err := convertSecret2ExtSecret(inputSecretList[0], tt.store.Kind, tt.store.Name)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {

@@ -18,36 +18,19 @@ const (
 	opaqueStringDataType
 )
 
-func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByOpaqueSecret(inputSecret *UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
 	var currentSecretOpaqueSubType int
-	if len(inputSecret.Data) != 0 && len(inputSecret.StringData) != 0 {
-		return nil, fmt.Errorf(NotSupportedSecretDataBothStringData, inputSecret.Name)
-	} else if len(inputSecret.Data) == 0 && len(inputSecret.StringData) == 0 {
-		return nil, fmt.Errorf(NotSupportedSecretDataEmpty, inputSecret.Name)
-	} else if len(inputSecret.Data) != 0 {
+	if len(inputSecret.Data) != 0 {
 		currentSecretOpaqueSubType = opaqueDataType
 	} else {
 		currentSecretOpaqueSubType = opaqueStringDataType
 	}
 
-	// get the secret of vault path
-	var secretPath = inputSecret.Annotations["avp.kubernetes.io/path"]
-	var resolvedSecretPath = resolved(secretPath)
-
 	// get the vault secret key
-	var vaultSecretKey, err = getVaultSecretKey(resolvedSecretPath)
+	var vaultSecretKey, err = getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
 	if err != nil {
 		return nil, fmt.Errorf(illegalVaultPath, resolvedSecretPath)
 	}
-
-	// new resolvedAnnotations
-	var resolvedAnnotations = make(map[string]string)
-	for annK, annV := range inputSecret.Annotations {
-		if annK != "avp.kubernetes.io/path" {
-			resolvedAnnotations[annK] = annV
-		}
-	}
-	resolvedAnnotations["avp.kubernetes.io/path"] = resolvedSecretPath
 
 	// for specific secret opaque sub-type
 	switch currentSecretOpaqueSubType {
@@ -73,7 +56,7 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 				Name:        inputSecret.Name,
 				Namespace:   inputSecret.Namespace,
 				Labels:      inputSecret.ObjectMeta.Labels,
-				Annotations: resolvedAnnotations,
+				Annotations: inputSecret.Annotations,
 			},
 			Spec: esv1beta1.ExternalSecretSpec{
 				SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -95,11 +78,11 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 		for fileName, fileContent := range inputSecret.StringData {
 			propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
 			for _, s := range propertyFromSecretData {
-				output := strings.TrimSpace(fmt.Sprintf("%s", s[1]))
+				output := strings.TrimSpace(string(s[1]))
 				// if secret key not found in externalSecretData then append to slice
 				if !contains(externalSecretData, output) {
 					externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
-						SecretKey: fmt.Sprintf("%s", output),
+						SecretKey: output,
 						RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 							Key:      vaultSecretKey,
 							Property: output,
@@ -124,7 +107,7 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 				Name:        inputSecret.Name,
 				Namespace:   inputSecret.Namespace,
 				Labels:      inputSecret.ObjectMeta.Labels,
-				Annotations: resolvedAnnotations,
+				Annotations: inputSecret.Annotations,
 			},
 			Spec: esv1beta1.ExternalSecretSpec{
 				SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -138,7 +121,7 @@ func generateOpaqueSecret(inputSecret UnstructuredSecret, storeType, storeName s
 					Template: &esv1beta1.ExternalSecretTemplate{
 						Type: corev1.SecretTypeOpaque,
 						Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-							Annotations: resolvedAnnotations,
+							Annotations: inputSecret.Annotations,
 							Labels:      inputSecret.ObjectMeta.Labels,
 						},
 						MergePolicy: esv1beta1.MergePolicyMerge,
