@@ -83,6 +83,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "input1",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,
@@ -148,6 +149,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "input1",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,
@@ -215,6 +217,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "input1",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,
@@ -299,6 +302,7 @@ port = 4000`,
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "tenant-a",
 						Kind: "ClusterSecretStore",
@@ -393,6 +397,7 @@ port = 4000`,
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",

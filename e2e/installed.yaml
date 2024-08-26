@@ -1,0 +1,101 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input1
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: kubernetes.io/basic-auth
+stringData:
+  username: "TEST_USERNAME"
+  password: "TEST_PASSWORD"
+  host: "localhost.local"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input2
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+data:
+  dist: dmVyc2lvbgo= #version
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input3
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+data:
+  dist: RElTVF9PRl9OQU1FX0xJTlVYCg== #DIST_OF_NAME_LINUX
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input4
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+data:
+  dist: UkVsVFZGOVBSbDlPUVUxRlgweEpUbFZZQ2c9PQo= #DIST_OF_NAME_LINUX
+  user: VVNFUl9OQU1FX09GX0dJVEhVQgo= #USER_NAME_OF_GITHUB
+  passwd: VE9LRU4K #TOKEN
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input5
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+stringData:
+  mylogin.conf: |
+    [client]
+    host = example.com
+    user = USER
+    password = MYSQL_PASSWD
+    port = 4000
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input6
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: Opaque
+stringData:
+  sn0rt.github.io.default.access_key: "VVNFUl9BQ0NFU1NfS0VZCg==" #USER_ACCESS_KEY
+  sn0rt.github.io.default.secret_key: "VVNFUl9TRUNSRVRfS0VZCg==" #USER_SECRET_KEY
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input7
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNyakNDQVpZQ0NRQ1N4TjdEbUl3OVRqQU5CZ2txaGtpRzl3MEJBUXNGQURBWk1SY3dGUVlEVlFRRERBNTUKYjNWeVpHOXRZV2x1TG1OdmJUQWVGdzB5TkRBNE1qWXdOakV4TlRKYUZ3MHlOVEE0TWpZd05qRXhOVEphTUJreApGekFWQmdOVkJBTU1Ebmx2ZFhKa2IyMWhhVzR1WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBCk1JSUJDZ0tDQVFFQXpJZDZDMU12ZkN3V0xDanNnejEwa29Ga3M2RklIbHlVNElwUDVtcitERVRGTnFKT1p6dnoKZStreGFFNjBsYkNhVDV6U2YxZDllQWM0M0t2b0w1eXBieUxWVGJjdCtlNnNYMm9rbWlzdGtxUmRxcjNtMm9hSAoyY3pKeUhEVVpyT3Z6SkRHTDJoNGdUdE03QXpsb3VaN3ViOGZNQUJDR3B5bUppNjlzMEZRQ21DakltWUdxcm02CnlpOU83VXp4bTlabmgzUWhXZ2xzbFJuS05oVUhzdHIxbnQ0K1NsMWU2TEhBbHJtTzF5eVJHUmphdHh1d1NKYTMKTUZKeFJnTHRWbnlMNzJmTWY3c1R3RzcrbDVXMmhsM2x5QW1yeGpORnIvMGJ6WHBVZHFnc0dObW84Ny80NmdSego1UFMrZVc5UzNwVDZPN2NkUlQzcTB3NVk2VUhidGdIQ3d3SURBUUFCTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCCkFRQU1HS3paS2ZsTllwRkpDczNMMEt6TFgrWmEzdG9jQUlBODFjQXU0NzNEem9uc1B3cEZaUnRPeVAzV0Foc0EKalpNcitnaVhkY3lvWjVEQTdEUkkxN0UxSDduZTFiaDR6RmtYRE1HdGQxdnZXM0xQNVlhb2NxUjlzdGMyL3A0dgpxVE03bjZ0alRqY2RYNEQ2eG5KSHRzbmF1dVBwTUdiTzUwK04yK3JobU1NbjZPVmpFRkgrRWlQYmYzNWtSbkhXCi83ZnowWnVtYkxwNUlqdWFjSFM2YXJwR25KNGZON1I2NVNHa0FpNEtvMFZ6VTNNM1laclFneFdpK29aTHpTUHUKUUZveWpYRlgvQlhBRG9vaEFuTlpkN2FmVmFaMlU3MjJqaEpKaEkxM0tobHRXb2RUT2hQVytabWxYeHZmRy9acwprdU1SVmZraHowaGlQWGtMWUVvQTZlN3MKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBeklkNkMxTXZmQ3dXTENqc2d6MTBrb0ZrczZGSUhseVU0SXBQNW1yK0RFVEZOcUpPClp6dnplK2t4YUU2MGxiQ2FUNXpTZjFkOWVBYzQzS3ZvTDV5cGJ5TFZUYmN0K2U2c1gyb2ttaXN0a3FSZHFyM20KMm9hSDJjekp5SERVWnJPdnpKREdMMmg0Z1R0TTdBemxvdVo3dWI4Zk1BQkNHcHltSmk2OXMwRlFDbUNqSW1ZRwpxcm02eWk5TzdVenhtOVpuaDNRaFdnbHNsUm5LTmhVSHN0cjFudDQrU2wxZTZMSEFscm1PMXl5UkdSamF0eHV3ClNKYTNNRkp4UmdMdFZueUw3MmZNZjdzVHdHNytsNVcyaGwzbHlBbXJ4ak5Gci8wYnpYcFVkcWdzR05tbzg3LzQKNmdSejVQUytlVzlTM3BUNk83Y2RSVDNxMHc1WTZVSGJ0Z0hDd3dJREFRQUJBb0lCQVFEQkxDdWV5cUNNdk83cwpJbkxQdVptQ1RlZVlxUGwrZzU2eFBMRWVSV3RRbHh0VThKTHdlZlVMMFVHeTdMTXV0aS9vaFl0aWJuVzRpY213CjBrUm53NlZickNDZVdDWjZhbXd2YWdiTC9YLzdnblpkTHlMOHZoZE5KRmhva2ZocVQ4ZjRnN3hMUm5hYVNESHMKdUhtakUrRkRuRG1Pa28vY3BwdGVjTU1Hck9jMkJFS25kT2lyK3M4Nnh1V3M1cldJME9QUU9tbUc3K0p1Ums5ZgpaTTZ2TkZ0a2FwRXRVQ0x3RzRmbDBPekE5azVqanJZYzJ5NFFSTlJlMDN1bHk2VU1vcGFQdXVLU28yUnFGZnJzCmthM1E4MnRZOWQyUDRtSW9qbTIvdU1sMXNDbS9TZnpjUThsdGpKRFlKM1p6QlRmSFI4WFBrcnBOeFBFNTM0MHQKYTNBUlpUMVJBb0dCQVBRN2djbG9tOTdoUXR1eFc2THdSRDljemRtUFFYdnVQMCtYS0czOU9GN3lwWUc4T05yMApPREZVb0dSTWc3bU02UVpEMjM4U0RRcGdrSy9URnN6SXpoWG5pblZFTUxnRDFhU2lkT0JPZFo5empUamRaUnNsCkZHaUlCaWR2U1hyODlGWEdZN1JYUDFXK2ZVVjZZOEdqSlY5M3pmc3hlTHRVQlBWRCtiOU96OE05QW9HQkFOWmkKUDdMYVcrSWZvK1c5WUV0NGxTUHZaZ3NyOVlVREI2YnMwM3FoL20wdHgrLzdFUjRKNTZGM2cydjJkOWZoQ0htQgpSQkZlajR1WUREazc1dklTNGJsVDVtNFk4czhGYTlRRk5MWkhZd1JQN29OWW8zblV1ekpRdDdXUEhpelVwUXVOClBqT2NZYmNvSElvbVZDZjlWNlV3dHNyUEhEZEk1MVNXVU5DYk4vMy9Bb0dBUTVCYXZTOFZQN2t0VjcxZXpscU4KWnNIenFHWDdCWi9KSCtsL0k3NVRZK0RZYkdWM2pRcldxTDd5aUF5cXZDQUJMdHlDMGtwYUZTN1ZsKzViZGxkdQp1NXlNTHhpb0taL1Y4RytJeWF5cTJXdUwrOWt6YVNqKzFsUWE3N25YcUJCbVAzeGNoTDFHSmlCR1kzd1NNTFZEClYzKzdHZXg3cThiNGdDbEg0K2FYanprQ2dZQTJNWm4ycFhwcXZDTGJkYmI4L1J0K2ZRc25zZEliOExzamVHU3gKY0hmM3M0WUNaVTViY0plTVdzRHZMdHYyeDUwejBmaWFCM1IwRGxpd3N6TGJhT2lFeCsvTlR5TTZNQjJrK0RmdQpDRGZBcEZBZ0JlMDFaQkI2Vkt0TUMwVE9nbWJDZDg4TWp2Q29zMHdicERyTDdTQVYweTJ5TVE3cDd0VURyZ2Y1CjQvTVFrd0tCZ1FEeHNyWi9lTEJOblBReWRwYTZ0Zmdsa2dOUnlTTE1JZDNiODg0a0VDcEpNTVRyMVcxVzBTYzAKVk0vZmtxeGRGNW15blRESTlGNkgwUDVwZjVOTjlFMHU2OHdLVE52REpjdVV1QnBXOGxtbFRGVjk2aDZQblNwZgprZFFESHdoc2ZKY3V0WEdIZmFVQklCdHZ6TW10cjg2SWwvWm5obUtxWWE2MklGRmhWNzNKK1E9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: input8
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+type: kubernetes.io/dockerconfigjson
+stringData:
+  .dockerconfigjson: |
+    {
+      "auths": {
+        "https://index.docker.io/v1": {
+          "auth": "PASSWD_FROM_VAULT"
+        },
+        "https://index.docker.io:8443/v1": {
+          "auth": "PASSWD_FROM_VAULT"
+        }      
+      }
+    }

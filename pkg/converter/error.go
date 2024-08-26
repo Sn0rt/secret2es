@@ -6,6 +6,7 @@ const (
 	ErrCommonNotFoundAVPPath                   = "not found avp.kubernetes.io/path: %s"
 	ErrCommonNotAcceptBothSecretDataAndData    = "not accept both Data and stringData Fields %s"
 	ErrCommonNotAcceptNeitherSecretDataAndData = "not accept neither Data and stringData Fields %s"
+	ErrCommonNotIncludeAngleBrackets           = "not include any angle brackets: %s"
 	NotImplSecretType                          = "not impl %s secret type: secret: %s"
 	illegalStoreType                           = "illegal store type: %s"
 	illegalVaultPath                           = "illegal vault path: %s"

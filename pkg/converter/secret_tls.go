@@ -45,6 +45,7 @@ func generateEsByTLS(inputSecret *UnstructuredSecret, storeType, storeName strin
 			Annotations: inputSecret.Annotations,
 		},
 		Spec: esv1beta1.ExternalSecretSpec{
+			RefreshInterval: stopRefreshInterval,
 			SecretStoreRef: esv1beta1.SecretStoreRef{
 				Name: storeName,
 				Kind: storeType,

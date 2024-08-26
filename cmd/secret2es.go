@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Sn0rt/sercert2extsecret/pkg/converter"
 	"github.com/spf13/cobra"
+
+	"github.com/Sn0rt/sercert2extsecret/pkg/converter"
 )
 
 var (
@@ -49,11 +50,7 @@ func extSecretGenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			outputPath, err := cmd.Flags().GetString("output")
-			if err != nil {
-				return err
-			}
-			err = converter.ConvertSecret(inputPath, storeType, storeName, outputPath)
+			err = converter.ConvertSecret(inputPath, storeType, storeName)
 			if err != nil {
 				return err
 			}
@@ -64,7 +61,6 @@ func extSecretGenCmd() *cobra.Command {
 	cmd.Flags().StringP("input", "i", "", "Input path of corev1 secret file (required)")
 	cmd.Flags().StringP("storetype", "s", "ClusterSecretStore", "Store type (optional)")
 	cmd.Flags().StringP("storename", "n", "", "Store name (required)")
-	cmd.Flags().String("output", "", "Output path external secret file (optional)")
 
 	err := cmd.MarkFlagRequired("input")
 	if err != nil {

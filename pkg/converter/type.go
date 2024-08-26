@@ -6,11 +6,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 	"strings"
+	"time"
 )
 
 const (
 	SecretStoreType        = "SecretStore"
 	ClusterSecretStoreType = "ClusterSecretStore"
+)
+
+var (
+	stopRefreshInterval = &metav1.Duration{Duration: time.Second * 0}
 )
 
 type UnstructuredSecret struct {

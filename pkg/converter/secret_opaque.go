@@ -38,6 +38,9 @@ func generateEsByOpaqueSecret(inputSecret *UnstructuredSecret, storeType, storeN
 		var externalSecretData []esv1beta1.ExternalSecretData
 		for key, value := range inputSecret.Data {
 			propertyFromSecretData := captureFromFile.FindStringSubmatch(value)
+			if len(propertyFromSecretData) == 0 {
+				continue
+			}
 			externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
 				SecretKey: key,
 				RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
@@ -59,6 +62,7 @@ func generateEsByOpaqueSecret(inputSecret *UnstructuredSecret, storeType, storeN
 				Annotations: inputSecret.Annotations,
 			},
 			Spec: esv1beta1.ExternalSecretSpec{
+				RefreshInterval: stopRefreshInterval,
 				SecretStoreRef: esv1beta1.SecretStoreRef{
 					Name: storeName,
 					Kind: storeType,
@@ -77,6 +81,9 @@ func generateEsByOpaqueSecret(inputSecret *UnstructuredSecret, storeType, storeN
 
 		for fileName, fileContent := range inputSecret.StringData {
 			propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
+			if len(propertyFromSecretData) == 0 {
+				continue
+			}
 			for _, s := range propertyFromSecretData {
 				output := strings.TrimSpace(string(s[1]))
 				// if secret key not found in externalSecretData then append to slice
@@ -110,6 +117,7 @@ func generateEsByOpaqueSecret(inputSecret *UnstructuredSecret, storeType, storeN
 				Annotations: inputSecret.Annotations,
 			},
 			Spec: esv1beta1.ExternalSecretSpec{
+				RefreshInterval: stopRefreshInterval,
 				SecretStoreRef: esv1beta1.SecretStoreRef{
 					Name: storeName,
 					Kind: storeType,

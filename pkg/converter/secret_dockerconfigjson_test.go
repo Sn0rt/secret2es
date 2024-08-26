@@ -59,6 +59,7 @@ stringData:
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "input1",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,

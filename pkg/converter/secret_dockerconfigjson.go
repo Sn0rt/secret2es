@@ -40,6 +40,9 @@ func generateEsByDockerConfigJSON(inputSecret *UnstructuredSecret, storeType, st
 	var externalSecretData []esv1beta1.ExternalSecretData
 	for _, loginInfo := range authFileContent.Auths {
 		propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(loginInfo.Auth), -1)
+		if len(propertyFromSecretData) == 0 {
+			continue
+		}
 		for _, s := range propertyFromSecretData {
 			output := strings.TrimSpace(string(s[1]))
 			// if secret key not found in externalSecretData then append to slice
@@ -81,6 +84,7 @@ func generateEsByDockerConfigJSON(inputSecret *UnstructuredSecret, storeType, st
 			Annotations: inputSecret.Annotations,
 		},
 		Spec: esv1beta1.ExternalSecretSpec{
+			RefreshInterval: stopRefreshInterval,
 			SecretStoreRef: esv1beta1.SecretStoreRef{
 				Name: storeName,
 				Kind: storeType,
