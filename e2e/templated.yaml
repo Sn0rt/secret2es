@@ -37,7 +37,7 @@ kind: Secret
 metadata:
   name: input4
   annotations:
-    avp.kubernetes.io/path: "secret/data/foo-test"
+    avp.kubernetes.io/path: "secret/data/test-foo"
 type: Opaque
 data:
   dist: <TEST_DIST_LINUX> #DIST_OF_NAME_LINUX
