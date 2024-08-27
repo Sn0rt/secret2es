@@ -45,7 +45,6 @@ status:
 ### `es-gen` subCommand Options
 
 - `-i, --input <corev1-secret-file>`: Required. Path to the input core v1 Secret file. Must include special `argocd-vault-plugin` annotations.
-- `-o, --output <external-secret-file>`: Required. Path to the output External Secret file.
 - `-s, --storetype <store-type>`: Optional. Type of secret store. Default is "ClusterSecretStore".
 - `-n, --storename <store-name>`: Required. Name of the secret store.
 
