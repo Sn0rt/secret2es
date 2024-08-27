@@ -1,11 +1,9 @@
-# Go parameters
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
-GOGET=$(GOCMD) get
 BINARY_NAME=secret2es
-BINARY_UNIX=$(BINARY_NAME)_unix
+DOCKER_REPO=wangguohao/secret2es
 
 # Build information
 VERSION=$(shell git describe --tags --always --dirty)
@@ -25,15 +23,7 @@ clean:
 	rm -f $(BINARY_NAME)
 	rm -f $(BINARY_UNIX)
 
-run:
-	$(GOBUILD) ${LDFLAGS} -o $(BINARY_NAME) -v
-	./$(BINARY_NAME)
-
-# Cross compilation
-build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) ${LDFLAGS} -o $(BINARY_UNIX) -v
-
 docker-build:
-	docker build -t $(BINARY_NAME):$(VERSION) .
+	docker build --build-arg VERSION=$(VERSION) --build-arg BUILD_TIME=$(BUILD_TIME) -t $(DOCKER_REPO):$(VERSION) .
 
-.PHONY: all build test clean run build-linux docker-build
+.PHONY: all build test clean docker-build

@@ -1,8 +1,8 @@
 # Build stage
-FROM golang:1.20-alpine AS builder
+FROM golang:1.23 AS builder
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /go/src/github.com/sn0rt/secret2es
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -13,19 +13,19 @@ RUN go mod download
 # Copy the source code
 COPY . .
 
-# Build the application
+# Build arguments
 ARG VERSION
 ARG BUILD_TIME
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X cmd.version=${VERSION} -X cmd.buildTime=${BUILD_TIME}" -o secert2es
+
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o secret2es \
+    -ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}" \
+    cmd/secret2es.go
 
 # Final stage
-FROM alpine:3.14
+FROM alpine:3.18
 
-# Set the working directory
 WORKDIR /root/
 
 # Copy the binary from the builder stage
-COPY --from=builder /app/sercert2extsecret .
-
-# Command to run the executable
-ENTRYPOINT ["./sercert2es"]
+COPY --from=builder /go/src/github.com/sn0rt/secret2es/secret2es .
