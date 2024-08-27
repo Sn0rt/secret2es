@@ -16,6 +16,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Config jq
+        uses: sergeysova/jq-action@v2
+
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
@@ -77,3 +80,13 @@ jobs:
           generate_external_secret_template
           apply_external_secret_template
           wait_external_secret_template_ready
+
+      - name: get the secret content
+        run: |
+          source e2e/e2e.sh
+          get_secret_content
+
+      - name: keep the k8s secret lifecycle is independent
+        run: |
+          source e2e/e2e.sh
+          keep_secret_lifecycle_independent
