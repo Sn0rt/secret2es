@@ -81,7 +81,6 @@ func secretCommonVerify(inputSecret UnstructuredSecret) error {
 		return fmt.Errorf(ErrCommonNotAcceptBothSecretDataAndData, inputSecret.Name)
 	}
 	if len(inputSecret.Data) == 0 && len(inputSecret.StringData) == 0 {
-		fmt.Println("ErrCommonNotAcceptNeitherSecretDataAndData")
 		return fmt.Errorf(ErrCommonNotAcceptNeitherSecretDataAndData, inputSecret.Name)
 	}
 

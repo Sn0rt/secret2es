@@ -5,6 +5,7 @@ import (
 	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
@@ -27,8 +28,9 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       "Secret",
 				},
+				Type: corev1.SecretTypeOpaque,
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "input1",
+					Name: "empty_data",
 					Annotations: map[string]string{
 						"avp.kubernetes.io/path": "secret/data/foo",
 					},
@@ -41,7 +43,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			err: fmt.Errorf(ErrCommonNotAcceptNeitherSecretDataAndData, "input1"),
+			err: fmt.Errorf(ErrCommonNotAcceptNeitherSecretDataAndData, "empty_data"),
 		},
 		{
 			name: "simple opaque type secret",
@@ -50,8 +52,9 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       "Secret",
 				},
+				Type: corev1.SecretTypeOpaque,
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "input1",
+					Name: "simple_example",
 					Annotations: map[string]string{
 						"avp.kubernetes.io/path": "secret/data/foo",
 					},
@@ -73,7 +76,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "input1",
+					Name:      "simple_example",
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
@@ -85,7 +88,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "input1",
+						Name:           "simple_example",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
@@ -112,8 +115,9 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       "Secret",
 				},
+				Type: corev1.SecretTypeOpaque,
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "input1",
+					Name: "multiple_env_with_path",
 					Annotations: map[string]string{
 						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
 					},
@@ -139,7 +143,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "input1",
+					Name:      "multiple_env_with_path",
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
@@ -151,7 +155,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "input1",
+						Name:           "multiple_env_with_path",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
@@ -178,8 +182,9 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       "Secret",
 				},
+				Type: corev1.SecretTypeOpaque,
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "input1",
+					Name: "multiple_property",
 					Annotations: map[string]string{
 						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
 					},
@@ -207,7 +212,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "input1",
+					Name:      "multiple_property",
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
@@ -219,7 +224,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "input1",
+						Name:           "multiple_property",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
@@ -260,8 +265,9 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       "Secret",
 				},
+				Type: corev1.SecretTypeOpaque,
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "string-data-example",
+					Name: "string_data_example",
 					Annotations: map[string]string{
 						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
 					},
@@ -270,8 +276,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					},
 				},
 				StringData: map[string]string{
-					"mylogin.conf": `
-[client]
+					"mylogin.conf": `[client]
 host = example.com
 user = < USER >
 password = <MYSQL_PASSWD>
@@ -292,7 +297,7 @@ port = 4000`,
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "string-data-example",
+					Name:      "string_data_example",
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
@@ -324,7 +329,7 @@ port = 4000`,
 						},
 					},
 					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "string-data-example",
+						Name:           "string_data_example",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
@@ -339,11 +344,10 @@ port = 4000`,
 							},
 							MergePolicy: esv1beta1.MergePolicyMerge,
 							Data: map[string]string{
-								"mylogin.conf": `
-[client]
+								"mylogin.conf": `[client]
 host = example.com
-"user = {{ .USER }}"
-"password = {{ .MYSQL_PASSWD }}"
+user = "{{ .USER }}"
+password = "{{ .MYSQL_PASSWD }}"
 port = 4000`,
 							},
 						},
@@ -358,8 +362,9 @@ port = 4000`,
 					APIVersion: "v1",
 					Kind:       "Secret",
 				},
+				Type: corev1.SecretTypeOpaque,
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "string-data-multiple-example",
+					Name: "string_data_multiple_example",
 					Annotations: map[string]string{
 						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
 					},
@@ -371,6 +376,7 @@ port = 4000`,
 					"sn0rt.github.io.default.access_key": "< USER_ACCESS_KEY >",
 					"sn0rt.github.io.default.secret_key": "<USER_SECRET_KEY>",
 					"sn0rt.github.io.default.cmt":        "sn0rt-<USER_SECRET_KEY>",
+					"sn0rt.github.io.default.key":        "key", // merge policy should ignore this
 				},
 			},
 			store: esv1beta1.SecretStoreRef{
@@ -387,7 +393,7 @@ port = 4000`,
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "string-data-multiple-example",
+					Name:      "string_data_multiple_example",
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
@@ -419,7 +425,7 @@ port = 4000`,
 						},
 					},
 					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "string-data-multiple-example",
+						Name:           "string_data_multiple_example",
 						CreationPolicy: esv1beta1.CreatePolicyMerge,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
@@ -452,15 +458,18 @@ port = 4000`,
 			}
 			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name)
 			if err != nil {
-				if err == tt.err {
-					t.Errorf("generateEsByOpaqueSecret() returned an unexpected error: got: %v, want: %v", err, tt.err)
+				if tt.err == nil {
+					t.Errorf("unexpected error: %v", err)
+				} else {
+					if errors.Is(err, tt.err) {
+						t.Errorf("expected error %v, got %v", tt.err, err)
+					}
 				}
 			} else {
-				externalSecret.Status = esv1beta1.ExternalSecretStatus{}
 				if diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(func(a, b esv1beta1.ExternalSecretData) bool {
 					return a.SecretKey > b.SecretKey
 				})); diff != "" {
-					t.Errorf("Mismatch (-want +got):\n%s", diff)
+					t.Errorf("%s case Mismatch (-want +got):\n%s", tt.name, diff)
 				}
 			}
 		})

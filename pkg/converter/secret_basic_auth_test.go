@@ -5,6 +5,7 @@ import (
 	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
@@ -27,6 +28,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       "Secret",
 				},
+				Type: corev1.SecretTypeBasicAuth,
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "input1",
 					Annotations: map[string]string{
@@ -50,6 +52,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					APIVersion: "v1",
 					Kind:       "Secret",
 				},
+				Type: corev1.SecretTypeBasicAuth,
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "input1",
 					Annotations: map[string]string{
@@ -60,9 +63,9 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					},
 				},
 				StringData: map[string]string{
+					"host":     `localhost.local`, // the external template  will ignore this key/value pair
 					"username": `<USER_ACCESS_KEY>`,
 					"password": `sn0rt_<USER_SECRET_KEY>`,
-					"host":     `localhost.local`,
 				},
 			},
 			expectExternalSecret: esv1beta1.ExternalSecret{
@@ -100,7 +103,6 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 							Data: map[string]string{
 								"username": `"{{ .USER_ACCESS_KEY }}"`,
 								"password": `"sn0rt_{{ .USER_SECRET_KEY }}"`,
-								"host":     `localhost.local`,
 							},
 						},
 					},
@@ -143,15 +145,18 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 			}
 			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name)
 			if err != nil {
-				if err == tt.err {
-					t.Errorf("generateEsByOpaqueSecret() returned an unexpected error: got: %v, want: %v", err, tt.err)
+				if tt.err == nil {
+					t.Errorf("unexpected error: %v", err)
+				} else {
+					if errors.Is(err, tt.err) {
+						t.Errorf("expected error %v, got %v", tt.err, err)
+					}
 				}
 			} else {
-				externalSecret.Status = esv1beta1.ExternalSecretStatus{}
 				if diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(func(a, b esv1beta1.ExternalSecretData) bool {
 					return a.SecretKey > b.SecretKey
 				})); diff != "" {
-					t.Errorf("Mismatch (-want +got):\n%s", diff)
+					t.Errorf("%s case Mismatch (-want +got):\n%s", tt.name, diff)
 				}
 			}
 		})
