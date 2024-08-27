@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 var (
@@ -91,15 +92,74 @@ func resolveAngleBrackets(s string) (string, error) {
 	return result.String(), nil
 }
 
-func addQuotesCurlyBraces(s string) string {
-	re := regexp.MustCompile(`(?m)^.*\{\{.*\}\}.*$`)
+func addQuotesCurlyBraces(input string) string {
+	var result []string
+	inCurlyBraces := false
 
-	result := re.ReplaceAllStringFunc(s, func(line string) string {
-		if strings.HasPrefix(line, `"`) && strings.HasSuffix(line, `"`) {
-			return line
+	lines := strings.Split(input, "\n")
+
+	for lineIndex, line := range lines {
+		processedLine := processLine(line, &inCurlyBraces)
+
+		if lineIndex > 0 {
+			// 如果不是第一行，添加换行符
+			result = append(result, "\n")
 		}
-		return `"` + line + `"`
-	})
 
-	return result
+		result = append(result, processedLine)
+	}
+
+	return strings.Join(result, "")
+}
+
+func processLine(line string, inCurlyBraces *bool) string {
+	var result []string
+	var currentWord strings.Builder
+	var leadingSpaces strings.Builder
+	processingLeadingSpaces := true
+
+	for _, char := range line {
+		if processingLeadingSpaces && unicode.IsSpace(char) {
+			leadingSpaces.WriteRune(char)
+			continue
+		} else if processingLeadingSpaces {
+			processingLeadingSpaces = false
+			result = append(result, leadingSpaces.String())
+		}
+
+		if char == '{' && currentWord.Len() > 0 && currentWord.String()[currentWord.Len()-1] == '{' {
+			*inCurlyBraces = true
+		} else if char == '}' && *inCurlyBraces {
+			if currentWord.Len() > 0 && currentWord.String()[currentWord.Len()-1] == '}' {
+				*inCurlyBraces = false
+			}
+		}
+
+		if unicode.IsSpace(char) && !*inCurlyBraces {
+			if currentWord.Len() > 0 {
+				word := currentWord.String()
+				if strings.Contains(word, "{{") && strings.Contains(word, "}}") {
+					result = append(result, `"`+word+`"`)
+				} else {
+					result = append(result, word)
+				}
+				currentWord.Reset()
+			}
+			result = append(result, string(char))
+		} else {
+			currentWord.WriteRune(char)
+		}
+	}
+
+	// 处理行末的单词
+	if currentWord.Len() > 0 {
+		word := currentWord.String()
+		if strings.Contains(word, "{{") && strings.Contains(word, "}}") {
+			result = append(result, `"`+word+`"`)
+		} else {
+			result = append(result, word)
+		}
+	}
+
+	return strings.Join(result, "")
 }

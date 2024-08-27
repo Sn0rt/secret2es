@@ -236,11 +236,11 @@ func TestAddQuotesForCurlyBraces(t *testing.T) {
 		},
 		{
 			originalString: `{{ .A }}-{{ .B }} {{ .C }}`,
-			expectString:   `"{{ .A }}-{{ .B }} {{ .C }}"`,
+			expectString:   `"{{ .A }}-{{ .B }}" "{{ .C }}"`,
 		},
 		{
 			originalString: `sn0rt-{{ .A }}-{{ .B }} {{ .C }}`,
-			expectString:   `"sn0rt-{{ .A }}-{{ .B }} {{ .C }}"`,
+			expectString:   `"sn0rt-{{ .A }}-{{ .B }}" "{{ .C }}"`,
 		},
 		{
 			originalString: `{{ .MYSQL_PASSWD }}`,
@@ -248,20 +248,30 @@ func TestAddQuotesForCurlyBraces(t *testing.T) {
 		},
 		{
 			originalString: `password = {{ .MYSQL_PASSWD }}`,
-			expectString:   `"password = {{ .MYSQL_PASSWD }}"`,
+			expectString:   `password = "{{ .MYSQL_PASSWD }}"`,
 		},
 		{
-			originalString: `
-[client]
+			originalString: `[client]
 host = example.com
 user = {{ .USER }}
 password = {{ .MYSQL_PASSWD }}
 port = 4000`,
-			expectString: `
-[client]
+			expectString: `[client]
 host = example.com
-"user = {{ .USER }}"
-"password = {{ .MYSQL_PASSWD }}"
+user = "{{ .USER }}"
+password = "{{ .MYSQL_PASSWD }}"
+port = 4000`,
+		},
+		{
+			originalString: `[client]
+host = example.com
+user = {{ .USER }}-password
+password = linux-{{ .MYSQL_PASSWD }}
+port = 4000`,
+			expectString: `[client]
+host = example.com
+user = "{{ .USER }}-password"
+password = "linux-{{ .MYSQL_PASSWD }}"
 port = 4000`,
 		},
 	}
