@@ -92,7 +92,7 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 
 func secretCommonVerify(inputSecret internalSecret) error {
 	if inputSecret.Annotations == nil {
-		return fmt.Errorf(ErrCommonNotEmptyAnnotations, inputSecret.Name)
+		return fmt.Errorf(ErrCommonEmptyAnnotations, inputSecret.Name)
 	}
 	if inputSecret.Annotations["avp.kubernetes.io/path"] == "" {
 		return fmt.Errorf(ErrCommonNotFoundAVPPath, inputSecret.Name)
