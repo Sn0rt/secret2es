@@ -50,6 +50,9 @@ func extSecretGenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if storeName == "" {
+				return fmt.Errorf("store name is required")
+			}
 			err = converter.ConvertSecret(inputPath, storeType, storeName)
 			if err != nil {
 				return err

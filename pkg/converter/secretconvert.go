@@ -53,7 +53,10 @@ func convertSecret2ExtSecret(inputSecret UnstructuredSecret, storeType, storeNam
 	}
 
 	// get the secret of vault path
-	var resolvedSecretPath = resolved(inputSecret.Annotations["avp.kubernetes.io/path"])
+	var resolvedSecretPath, err = resolved(inputSecret.Annotations["avp.kubernetes.io/path"])
+	if err != nil {
+		return nil, err
+	}
 	inputSecret.Annotations["avp.kubernetes.io/path"] = resolvedSecretPath
 
 	switch inputSecret.Type {
