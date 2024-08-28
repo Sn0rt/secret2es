@@ -6,7 +6,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func generateEsByTLS(inputSecret *UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByTLS(inputSecret *internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
 	if len(inputSecret.StringData) != 0 {
 		return nil, fmt.Errorf(ErrTLSNotAllowDataField, inputSecret.Name)
 	}

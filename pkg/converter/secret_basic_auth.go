@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func generateEsByBasicAuthSecret(inputSecret *UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByBasicAuthSecret(inputSecret *internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
 	if len(inputSecret.Data) != 0 {
 		return nil, fmt.Errorf(ErrBasicAuthNotAllowDataField, inputSecret.Name)
 	}

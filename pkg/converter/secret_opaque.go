@@ -18,7 +18,7 @@ const (
 	opaqueStringDataType
 )
 
-func generateEsByOpaqueSecret(inputSecret *UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
 	var currentSecretOpaqueSubType int
 	if len(inputSecret.Data) != 0 {
 		currentSecretOpaqueSubType = opaqueDataType
