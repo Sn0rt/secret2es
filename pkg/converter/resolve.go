@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"regexp"
@@ -166,4 +167,27 @@ func processLine(line string, inCurlyBraces *bool) string {
 	}
 
 	return strings.Join(result, "")
+}
+
+func processCommented(input []byte) []byte {
+	var output []byte
+	lines := bytes.Split(input, []byte("\n"))
+
+	for _, line := range lines {
+		trimmedLine := bytes.TrimLeft(line, " \t")
+		if len(trimmedLine) == 0 || trimmedLine[0] != '#' {
+			if idx := bytes.IndexByte(line, '#'); idx != -1 {
+				line = line[:idx]
+			}
+			output = append(output, line...)
+			output = append(output, '\n')
+		}
+	}
+
+	// 移除最后一个多余的换行符
+	if len(output) > 0 && output[len(output)-1] == '\n' {
+		output = output[:len(output)-1]
+	}
+
+	return output
 }

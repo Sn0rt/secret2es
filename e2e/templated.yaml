@@ -94,6 +94,17 @@ data:
   tls.crt: <TLS_CRT>
   tls.key: <TLS_KEY>
 ---
+#apiVersion: v1
+#kind: Secret
+#metadata:
+#  name: input7
+#  annotations:
+#    avp.kubernetes.io/path: "secret/data/test-foo"
+#type: kubernetes.io/tls
+#data:
+#  tls.crt: <TLS_CRT>
+#  tls.key: <TLS_KEY>
+---
 apiVersion: v1
 kind: Secret
 metadata:

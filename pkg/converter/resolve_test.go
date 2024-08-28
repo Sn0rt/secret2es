@@ -291,3 +291,57 @@ port = 4000`,
 		})
 	}
 }
+
+func Test_processCommented(t *testing.T) {
+	tests := []struct {
+		name  string
+		input []byte
+		want  []byte
+	}{
+		{
+			name:  "should_get_empty",
+			input: []byte(`# +optional`),
+			want:  []byte(``),
+		},
+		{
+			name: "should_get_1_line",
+			input: []byte(`# +optional
+metav1.ObjectMeta`),
+			want: []byte(`metav1.ObjectMeta`),
+		},
+		{
+			name: "should_get_2_yaml",
+			input: []byte(`apiVersion: v1
+kind: Secret
+---
+#apiVersion: v1
+#kind: Secret
+#metadata:
+#  name: input7
+#  annotations:
+#    avp.kubernetes.io/path: "secret/data/test-foo"
+#type: kubernetes.io/tls
+#data:
+#  tls.crt: <TLS_CRT>
+#  tls.key: <TLS_KEY>
+---
+apiVersion: v1
+kind: Secret`),
+			want: []byte(`apiVersion: v1
+kind: Secret
+---
+---
+apiVersion: v1
+kind: Secret`),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := processCommented(tt.input)
+			if string(got) != string(tt.want) {
+				t.Errorf("processCommented() got:%v, want:%v", string(got), string(tt.want))
+			}
+		})
+	}
+}

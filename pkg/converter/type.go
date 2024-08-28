@@ -55,8 +55,9 @@ type internalSecret struct {
 	Type corev1.SecretType `json:"type,omitempty" protobuf:"bytes,3,opt,name=type,casttype=SecretType"`
 }
 
-func splitYAMLDocuments(data string) []string {
-	return strings.Split(data, "---")
+func splitYAMLDocuments(fileBody []byte) []string {
+	fileBodyWithoutCommented := processCommented(fileBody)
+	return strings.Split(string(fileBodyWithoutCommented), "---")
 }
 
 func parseUnstructuredSecret(body []byte) ([]internalSecret, error) {
@@ -69,12 +70,13 @@ func parseUnstructuredSecret(body []byte) ([]internalSecret, error) {
 	}()
 
 	var secrets []internalSecret
-	for _, yamlContent := range splitYAMLDocuments(string(body)) {
+	for _, yamlContent := range splitYAMLDocuments(body) {
 		if !strings.Contains(yamlContent, "kind: Secret") {
 			continue
 		}
 		inputSecret := &internalSecret{}
 		if err := yaml.Unmarshal([]byte(yamlContent), &inputSecret); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "yaml content: %s\n", yamlContent)
 			return nil, fmt.Errorf("error unmarshalling inputSecret secret: %w", err)
 		}
 		secrets = append(secrets, *inputSecret)
