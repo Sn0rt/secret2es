@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -11,6 +12,7 @@ func TestResolved(t *testing.T) {
 		originalString string
 		expectString   string
 		envs           map[string]string // for render <% ENV %>
+		err            error
 	}{
 		{
 			originalString: "test-ubuntu-20.04-linux",
@@ -55,7 +57,7 @@ func TestResolved(t *testing.T) {
 		},
 		{
 			originalString: "<%      NOTSETVAR  %>-linux",
-			expectString:   "-linux",
+			err:            fmt.Errorf(ErrCommonNotSetEnv, "NOTSETVAR"),
 		},
 	}
 
@@ -66,8 +68,12 @@ func TestResolved(t *testing.T) {
 					t.Errorf("os.Setenv() returned an unexpected error: got: %v", err)
 				}
 			}
-			out := resolved(tt.originalString)
-			if out != tt.expectString {
+			out, err := resolved(tt.originalString)
+			if err != nil {
+				if tt.err != nil && errors.Is(tt.err, err) {
+					t.Errorf("resolved() returned an unexpected error: got: %v, want: %v", err, tt.err)
+				}
+			} else if out != tt.expectString {
 				t.Errorf("resolved() returned an unexpected string: got: %s, want: %s", out, tt.expectString)
 			}
 		})

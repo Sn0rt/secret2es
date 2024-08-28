@@ -19,13 +19,13 @@ func generateEsByTLS(inputSecret *UnstructuredSecret, storeType, storeName strin
 
 	// for specific secret opaque sub-type
 	var externalSecretData []esv1beta1.ExternalSecretData
-	for _, pemContent := range inputSecret.Data {
+	for fileName, pemContent := range inputSecret.Data {
 		propertyFromSecretData := captureFromFile.FindStringSubmatch(pemContent)
 		if len(propertyFromSecretData) == 0 {
 			continue
 		}
 		externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
-			SecretKey: propertyFromSecretData[1],
+			SecretKey: fileName,
 			RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 				Key:      vaultSecretKey,
 				Property: propertyFromSecretData[1],

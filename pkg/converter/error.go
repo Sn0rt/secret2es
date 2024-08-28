@@ -7,6 +7,7 @@ const (
 	ErrCommonNotAcceptBothSecretDataAndData    = "not accept both Data and stringData Fields %s"
 	ErrCommonNotAcceptNeitherSecretDataAndData = "not accept neither Data and stringData Fields %s"
 	ErrCommonNotIncludeAngleBrackets           = "not include any angle brackets: %s"
+	ErrCommonNotSetEnv                         = "not set ENV: %s"
 	NotImplSecretType                          = "not impl %s secret type: secret: %s"
 	illegalStoreType                           = "illegal store type: %s"
 	illegalVaultPath                           = "illegal vault path: %s"
