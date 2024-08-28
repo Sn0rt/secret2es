@@ -2,22 +2,18 @@ package converter
 
 // for secret common check
 const (
-	ErrCommonNotEmptyAnnotations               = "not empty annotations: %s"
-	ErrCommonNotFoundAVPPath                   = "not found avp.kubernetes.io/path: %s"
-	ErrCommonNotAcceptBothSecretDataAndData    = "not accept both Data and stringData Fields %s"
-	ErrCommonNotAcceptNeitherSecretDataAndData = "not accept neither Data and stringData Fields %s"
-	ErrCommonNotIncludeAngleBrackets           = "not include any angle brackets: %s"
+	ErrCommonEmptyAnnotations                  = "not accept empty annotations of secret: %s"
+	ErrCommonNotFoundAVPPath                   = "not found avp.kubernetes.io/path from secret: %s"
+	ErrCommonNotAcceptBothSecretDataAndData    = "not accept both Data and stringData Fields of secret: %s"
+	ErrCommonNotAcceptNeitherSecretDataAndData = "not accept neither Data and stringData Fields of secret %s"
+	ErrCommonNotIncludeAngleBrackets           = "not include any angle brackets of secret: %s"
+	ErrCommonNotNeedRefData                    = "not need ref data of secret: %s"
 	ErrCommonNotSetEnv                         = "not set ENV: %s"
-	NotImplSecretType                          = "not impl %s secret type: secret: %s"
+	NotImplSecretType                          = "not impl %s secret type of secret: %s"
 	illegalStoreType                           = "illegal store type: %s"
 	illegalVaultPath                           = "illegal vault path: %s"
 	NotSupportedSecretData                     = "secret support only Data or stringData: %s"
 	FileContentAngleBracketsParseSyntaxError   = "template syntax error: %s"
-)
-
-const (
-	ErrOpaqueNotAllowDataAndStringData      = "kubernetes.io/opaque type should not allow set Data and stringData Fields %s"
-	ErrOpaqueNotAllowEmptyDataAndStringData = "kubernetes.io/opaque type should not allow empty Data and stringData Fields %s"
 )
 
 const (

@@ -37,6 +37,13 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 	case opaqueDataType:
 		var externalSecretData []esv1beta1.ExternalSecretData
 		for key, value := range inputSecret.Data {
+			// should ignore parse <% %> first
+			// because it has been resolved by argo-vault-cd
+			if resolvedSecretPath.MatchString(value) {
+				continue
+			}
+
+			// parse <>
 			propertyFromSecretData := captureFromFile.FindStringSubmatch(value)
 			if len(propertyFromSecretData) == 0 {
 				continue
@@ -48,6 +55,9 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 					Property: propertyFromSecretData[1],
 				},
 			})
+		}
+		if len(externalSecretData) == 0 {
+			return nil, fmt.Errorf(ErrCommonNotNeedRefData, inputSecret.Name)
 		}
 
 		return &esv1beta1.ExternalSecret{

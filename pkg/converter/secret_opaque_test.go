@@ -5,7 +5,6 @@ import (
 	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
@@ -449,6 +448,126 @@ port = 4000`,
 				},
 			},
 		},
+		{
+			name: "resolve the value from env",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "set_env_with_body_no_gen_es",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Data: map[string]string{
+					"data1": "data1",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			err: fmt.Errorf(ErrCommonNotIncludeAngleBrackets, "set_env_with_body_no_gen_es"),
+		},
+		{
+			name: "resolve the value from env case 1",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "set_env_with_body_no_gen_es_1",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Data: map[string]string{
+					"data1": "data1",
+					"data2": "<% DIST %>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			err: fmt.Errorf(ErrCommonNotNeedRefData, "set_env_with_body_no_gen_es_1"),
+		},
+		{
+			name: "resolve the value from env case 2",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "set_env_with_body_no_gen_es_2",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Data: map[string]string{
+					"data1": "data1",
+					"data2": "<% DIST %>",
+					"data3": "<FROM_VAULT_DATA3>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "set_env_with_body_no_gen_es_2",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "set_env_with_body_no_gen_es_2",
+						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+					},
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "test",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "data3",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "foo",
+								Property: "FROM_VAULT_DATA3",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -458,17 +577,16 @@ port = 4000`,
 			}
 			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name)
 			if err != nil {
-				if tt.err == nil {
-					t.Errorf("unexpected error: %v", err)
-				} else {
-					if errors.Is(err, tt.err) {
-						t.Errorf("expected error %v, got %v", tt.err, err)
-					}
+				if tt.err.Error() != err.Error() {
+					t.Errorf("Err Mismatch (+goot: %s)\n", err)
+					t.Errorf("Err Mismatch (+want: %s)\n", tt.err)
 				}
 			} else {
-				if diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(func(a, b esv1beta1.ExternalSecretData) bool {
-					return a.SecretKey > b.SecretKey
-				})); diff != "" {
+				diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(
+					func(a, b esv1beta1.ExternalSecretData) bool {
+						return a.SecretKey > b.SecretKey
+					}))
+				if diff != "" {
 					t.Errorf("%s case Mismatch (-want +got):\n%s", tt.name, diff)
 				}
 			}
