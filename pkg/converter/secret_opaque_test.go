@@ -15,7 +15,7 @@ import (
 func TestGenerateOpaqueSecret(t *testing.T) {
 	tests := []struct {
 		name                 string
-		inputSecret          UnstructuredSecret
+		inputSecret          internalSecret
 		expectExternalSecret esv1beta1.ExternalSecret
 		store                esv1beta1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
@@ -23,7 +23,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 	}{
 		{
 			name: "empty opaque type secret",
-			inputSecret: UnstructuredSecret{
+			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Secret",
@@ -47,7 +47,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 		},
 		{
 			name: "simple opaque type secret",
-			inputSecret: UnstructuredSecret{
+			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Secret",
@@ -110,7 +110,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 		},
 		{
 			name: "opaque type secret with path <% ENV %>",
-			inputSecret: UnstructuredSecret{
+			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Secret",
@@ -177,7 +177,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 		},
 		{
 			name: "opaque type secret with path <% ENV %> and multiple property",
-			inputSecret: UnstructuredSecret{
+			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Secret",
@@ -260,7 +260,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 		},
 		{
 			name: "opaque type secret with path <% ENV %> and stringData",
-			inputSecret: UnstructuredSecret{
+			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Secret",
@@ -357,7 +357,7 @@ port = 4000`,
 		},
 		{
 			name: "opaque type secret with path <% ENV %> and multiple stringData",
-			inputSecret: UnstructuredSecret{
+			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Secret",

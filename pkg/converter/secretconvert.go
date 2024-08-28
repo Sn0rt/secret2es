@@ -30,11 +30,13 @@ func ConvertSecret(inputFile, storeType, storeName string) error {
 			}
 			return fmt.Errorf("error converting secret to external secret: %s", err.Error())
 		}
-
 		yamlData, err := yaml.Marshal(externalSecret)
 		if err != nil {
 			return fmt.Errorf("error encoding external secret: %w", err)
 		}
+
+		// remove the status field
+		yamlData = removeStatusField(yamlData)
 		fmt.Printf("---\n")
 		fmt.Printf("%s", yamlData)
 	}
@@ -42,7 +44,22 @@ func ConvertSecret(inputFile, storeType, storeName string) error {
 	return nil
 }
 
-func convertSecret2ExtSecret(inputSecret UnstructuredSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func removeStatusField(yamlData []byte) []byte {
+	var externalSecret map[string]interface{}
+	if err := yaml.Unmarshal(yamlData, &externalSecret); err != nil {
+		return yamlData
+	}
+
+	delete(externalSecret, "status")
+	newYamlData, err := yaml.Marshal(externalSecret)
+	if err != nil {
+		return yamlData
+	}
+
+	return newYamlData
+}
+
+func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
 	if err := secretCommonVerify(inputSecret); err != nil {
 		return nil, err
 	}
@@ -73,7 +90,7 @@ func convertSecret2ExtSecret(inputSecret UnstructuredSecret, storeType, storeNam
 	return nil, fmt.Errorf(NotImplSecretType, inputSecret.Type, inputSecret.Name)
 }
 
-func secretCommonVerify(inputSecret UnstructuredSecret) error {
+func secretCommonVerify(inputSecret internalSecret) error {
 	if inputSecret.Annotations == nil {
 		return fmt.Errorf(ErrCommonNotEmptyAnnotations, inputSecret.Name)
 	}

@@ -15,7 +15,7 @@ import (
 func TestGenerateBasicAuthSecret(t *testing.T) {
 	tests := []struct {
 		name                 string
-		inputSecret          UnstructuredSecret
+		inputSecret          internalSecret
 		expectExternalSecret esv1beta1.ExternalSecret
 		store                esv1beta1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
@@ -23,7 +23,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 	}{
 		{
 			name: "empty opaque type secret",
-			inputSecret: UnstructuredSecret{
+			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Secret",
@@ -47,7 +47,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 		},
 		{
 			name: "a simple case",
-			inputSecret: UnstructuredSecret{
+			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
 					Kind:       "Secret",

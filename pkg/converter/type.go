@@ -4,6 +4,8 @@ import (
 	"fmt"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"os"
+	"runtime/debug"
 	"sigs.k8s.io/yaml"
 	"strings"
 	"time"
@@ -18,7 +20,7 @@ var (
 	stopRefreshInterval = &metav1.Duration{Duration: time.Second * 0}
 )
 
-type UnstructuredSecret struct {
+type internalSecret struct {
 	metav1.TypeMeta `json:",inline"`
 	// Standard object's metadata.
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
@@ -57,13 +59,21 @@ func splitYAMLDocuments(data string) []string {
 	return strings.Split(data, "---")
 }
 
-func parseUnstructuredSecret(body []byte) ([]UnstructuredSecret, error) {
-	var secrets []UnstructuredSecret
+func parseUnstructuredSecret(body []byte) ([]internalSecret, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "Panic occurred: %v\n", r)
+			_, _ = fmt.Fprintf(os.Stderr, "Body content:\n%s\n", string(body))
+			_, _ = fmt.Fprintf(os.Stderr, "Stack trace:\n%s\n", debug.Stack())
+		}
+	}()
+
+	var secrets []internalSecret
 	for _, yamlContent := range splitYAMLDocuments(string(body)) {
 		if !strings.Contains(yamlContent, "kind: Secret") {
 			continue
 		}
-		inputSecret := &UnstructuredSecret{}
+		inputSecret := &internalSecret{}
 		if err := yaml.Unmarshal([]byte(yamlContent), &inputSecret); err != nil {
 			return nil, fmt.Errorf("error unmarshalling inputSecret secret: %w", err)
 		}
