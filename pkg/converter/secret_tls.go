@@ -14,7 +14,7 @@ func generateEsByTLS(inputSecret *internalSecret, storeType, storeName string) (
 	// get the vault secret key
 	var vaultSecretKey, err = getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
 	if err != nil {
-		return nil, fmt.Errorf(illegalVaultPath, resolvedSecretPath)
+		return nil, fmt.Errorf(illegalVaultPath, resolvedValueFromEnv)
 	}
 
 	// for specific secret opaque sub-type

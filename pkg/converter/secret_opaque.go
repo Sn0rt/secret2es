@@ -29,7 +29,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 	// get the vault secret key
 	var vaultSecretKey, err = getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
 	if err != nil {
-		return nil, fmt.Errorf(illegalVaultPath, resolvedSecretPath)
+		return nil, fmt.Errorf(illegalVaultPath, resolvedValueFromEnv)
 	}
 
 	// for specific secret opaque sub-type
@@ -39,7 +39,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		for key, value := range inputSecret.Data {
 			// should ignore parse <% %> first
 			// because it has been resolved by argo-vault-cd
-			if resolvedSecretPath.MatchString(value) {
+			if resolvedValueFromEnv.MatchString(value) {
 				continue
 			}
 
@@ -90,6 +90,12 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		var templateData = map[string]string{}
 
 		for fileName, fileContent := range inputSecret.StringData {
+			// should ignore parse <% %> first
+			// because it has been resolved by argo-vault-cd
+			if resolvedValueFromEnv.MatchString(fileContent) {
+				continue
+			}
+
 			propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
 			if len(propertyFromSecretData) == 0 {
 				continue
@@ -107,12 +113,17 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 					})
 				}
 			}
+
 			newFileContentWithoutQuote, err := resolveAngleBrackets(fileContent)
 			if err != nil {
 				return nil, err
 			}
 			var newFileContent = addQuotesCurlyBraces(newFileContentWithoutQuote)
 			templateData[fileName] = newFileContent
+		}
+
+		if len(externalSecretData) == 0 {
+			return nil, fmt.Errorf(ErrCommonNotNeedRefData, inputSecret.Name)
 		}
 
 		return &esv1beta1.ExternalSecret{

@@ -22,7 +22,7 @@ func generateEsByBasicAuthSecret(inputSecret *internalSecret, storeType, storeNa
 	// get vault secret key
 	var vaultSecretKey, err = getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
 	if err != nil {
-		return nil, fmt.Errorf(illegalVaultPath, resolvedSecretPath)
+		return nil, fmt.Errorf(illegalVaultPath, resolvedValueFromEnv)
 	}
 
 	var externalSecretData []esv1beta1.ExternalSecretData

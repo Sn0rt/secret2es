@@ -11,11 +11,11 @@ import (
 
 var (
 	patternResolveFromEnv = `<%\s*(\w+)\s*%>`
-	resolvedSecretPath    = regexp.MustCompile(patternResolveFromEnv)
+	resolvedValueFromEnv  = regexp.MustCompile(patternResolveFromEnv)
 )
 
 func resolved(originalString string) (string, error) {
-	needResolvedStrings := resolvedSecretPath.FindAllStringSubmatch(originalString, -1)
+	needResolvedStrings := resolvedValueFromEnv.FindAllStringSubmatch(originalString, -1)
 	for _, match := range needResolvedStrings {
 		if len(match) > 1 {
 			env := match[1]
@@ -184,7 +184,6 @@ func processCommented(input []byte) []byte {
 		}
 	}
 
-	// 移除最后一个多余的换行符
 	if len(output) > 0 && output[len(output)-1] == '\n' {
 		output = output[:len(output)-1]
 	}

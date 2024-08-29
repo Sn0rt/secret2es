@@ -568,6 +568,122 @@ port = 4000`,
 				},
 			},
 		},
+		{
+			name: "opaque type secret with <% ENV %> with stringData and multiple stringData",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "multiple_example_env_with_stringData",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"sn0rt.github.io.default.access_key": "<USER_ACCESS_KEY>",
+					"sn0rt.github.io.default.secret_key": "<% USER_SECRET_KEY %>",
+					"sn0rt.github.io.default.key":        "key", // merge policy should ignore this
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-b",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "multiple_example_env_with_stringData",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "tenant-b",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "USER_ACCESS_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "foo",
+								Property: "USER_ACCESS_KEY",
+							},
+						},
+					},
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "multiple_example_env_with_stringData",
+						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Annotations: map[string]string{
+									"avp.kubernetes.io/path": "secret/data/foo",
+								},
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyMerge,
+							Data: map[string]string{
+								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "resolve <% ENV %> with stringData and multiple stringData empty ref",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "multiple_stringData_should_empty_ref",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"sn0rt.github.io.default.secret_key": "<% USER_SECRET_KEY %>",
+					"sn0rt.github.io.default.key":        "key", // merge policy should ignore this
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-b",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			err: fmt.Errorf(ErrCommonNotNeedRefData, "multiple_stringData_should_empty_ref"),
+		},
 	}
 
 	for _, tt := range tests {

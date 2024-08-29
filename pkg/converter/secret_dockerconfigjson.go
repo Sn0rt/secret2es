@@ -28,7 +28,7 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 	// get the vault secret key
 	vaultSecretKey, err := getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
 	if err != nil {
-		return nil, fmt.Errorf(illegalVaultPath, resolvedSecretPath)
+		return nil, fmt.Errorf(illegalVaultPath, resolvedValueFromEnv)
 	}
 
 	authFileContent, err := serializeDockerConfigJSON([]byte(inputSecret.StringData[".dockerconfigjson"]))
