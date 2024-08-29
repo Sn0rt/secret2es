@@ -99,3 +99,14 @@ stringData:
         }      
       }
     }
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: approle1-secret
+  annotations:
+    avp.kubernetes.io/path: "secret/data/approle1-secret"
+type: kubernetes.io/basic-auth
+stringData:
+  username: "default_username"
+  password: "default_password"
