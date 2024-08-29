@@ -1,7 +1,6 @@
 package converter
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -9,16 +8,19 @@ import (
 
 func TestResolved(t *testing.T) {
 	tests := []struct {
+		name           string
 		originalString string
 		expectString   string
 		envs           map[string]string // for render <% ENV %>
 		err            error
 	}{
 		{
+			name:           "simple case",
 			originalString: "test-ubuntu-20.04-linux",
 			expectString:   "test-ubuntu-20.04-linux",
 		},
 		{
+			name:           "include_space_and_env",
 			originalString: "<%      ENV    %>-linux",
 			expectString:   "test-linux",
 			envs: map[string]string{
@@ -26,6 +28,7 @@ func TestResolved(t *testing.T) {
 			},
 		},
 		{
+			name:           "include_many_space_and_env",
 			originalString: "secret/foo/<%      ENV    %>-linux",
 			expectString:   "secret/foo/test-linux",
 			envs: map[string]string{
@@ -33,6 +36,7 @@ func TestResolved(t *testing.T) {
 			},
 		},
 		{
+			name:           "include_many_space_and_env_2",
 			originalString: "<% ENV    %>-linux",
 			expectString:   "test-linux",
 			envs: map[string]string{
@@ -40,6 +44,7 @@ func TestResolved(t *testing.T) {
 			},
 		},
 		{
+			name:           "include_many_env",
 			originalString: "<% ENV %>-<% DIST %>-<% VER %>-linux",
 			expectString:   "test-ubuntu-20.04-linux",
 			envs: map[string]string{
@@ -49,6 +54,7 @@ func TestResolved(t *testing.T) {
 			},
 		},
 		{
+			name:           "illegal_env",
 			originalString: "<%      ENV    -linux",
 			expectString:   "<%      ENV    -linux",
 			envs: map[string]string{
@@ -56,25 +62,26 @@ func TestResolved(t *testing.T) {
 			},
 		},
 		{
+			name:           "can_not_been_resolve",
 			originalString: "<%      NOTSETVAR  %>-linux",
 			err:            fmt.Errorf(ErrCommonNotSetEnv, "NOTSETVAR"),
 		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.originalString, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			for k, v := range tt.envs {
-				if err := os.Setenv(k, v); err != nil {
-					t.Errorf("os.Setenv() returned an unexpected error: got: %v", err)
-				}
+				_ = os.Setenv(k, v)
 			}
 			out, err := resolved(tt.originalString)
 			if err != nil {
-				if tt.err != nil && errors.Is(tt.err, err) {
+				if err.Error() != tt.err.Error() {
 					t.Errorf("resolved() returned an unexpected error: got: %v, want: %v", err, tt.err)
 				}
-			} else if out != tt.expectString {
-				t.Errorf("resolved() returned an unexpected string: got: %s, want: %s", out, tt.expectString)
+			} else {
+				if out != tt.expectString {
+					t.Errorf("resolved() returned an unexpected string: got: %s, want: %s", out, tt.expectString)
+				}
 			}
 		})
 	}
@@ -133,60 +140,74 @@ func TestGetVaultSecretKey(t *testing.T) {
 
 func TestResolveAngleBrackets(t *testing.T) {
 	tests := []struct {
+		name           string
 		originalString string
 		expectString   string
 		err            error
 	}{
 		{
+			name:           "simple",
 			originalString: "test-ubuntu-20.04-linux",
 			expectString:   "test-ubuntu-20.04-linux",
 		},
 		{
+			name:           "include_angle_brackets",
 			originalString: "<A>-linux",
 			expectString:   "{{ .A }}-linux",
 		},
 		{
+			name:           "include_many_space_and_angle_brackets",
 			originalString: "<   A   >-linux",
 			expectString:   "{{ .A }}-linux",
 		},
 		{
+			name:           "include_many_space_and_angle_brackets_2",
 			originalString: "<A    >-linux",
 			expectString:   "{{ .A }}-linux",
 		},
 		{
+			name:           "include_many_space_and_angle_brackets_3",
 			originalString: "<   A>-linux",
 			expectString:   "{{ .A }}-linux",
 		},
 		{
+			name:           "angle_brackets_connected",
 			originalString: "sn0rt-<A>-linux",
 			expectString:   "sn0rt-{{ .A }}-linux",
 		},
 		{
+			name:           "angle_brackets_connected_2",
 			originalString: "sn0rt-<A>-<B>",
 			expectString:   "sn0rt-{{ .A }}-{{ .B }}",
 		},
 		{
+			name:           "illegal_angle_brackets",
 			originalString: "sn0rt-<A",
 			expectString:   "sn0rt-<A",
-			err:            fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `syntax error: unclosed '<'`),
+			err:            fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `unclosed '<'`),
 		},
 		{
+			name:           "multi_angle_brackets",
 			originalString: "<A>-<B> <C>",
 			expectString:   "{{ .A }}-{{ .B }} {{ .C }}",
 		},
 		{
+			name:           "multi_angle_brackets_2",
 			originalString: "sn0rt-<A>-<B> <C>",
 			expectString:   "sn0rt-{{ .A }}-{{ .B }} {{ .C }}",
 		},
 		{
+			name:           "simple_case_2",
 			originalString: "<MYSQL_PASSWD>",
 			expectString:   "{{ .MYSQL_PASSWD }}",
 		},
 		{
+			name:           "include_equal_sign",
 			originalString: "password = <MYSQL_PASSWD>",
 			expectString:   "password = {{ .MYSQL_PASSWD }}",
 		},
 		{
+			name: "simple_file",
 			originalString: `
 [client]
 host = example.com
@@ -200,18 +221,35 @@ user = {{ .USER }}
 password = {{ .MYSQL_PASSWD }}
 port = 4000`,
 		},
+		{
+			name: "yaml_file",
+			originalString: `type: S3
+prefix: "test/ubuntu"
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: <S3_ACCESS_KEY>
+  secret_key: <S3_SECRET_KEY>`,
+			expectString: `type: S3
+prefix: "test/ubuntu"
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: {{ .S3_ACCESS_KEY }}
+  secret_key: {{ .S3_SECRET_KEY }}`,
+		},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.originalString, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			out, err := resolveAngleBrackets(tt.originalString)
 			if err != nil {
 				if err.Error() != tt.err.Error() {
-					t.Errorf("resolveAngleBrackets() returned an unexpected error: got: %v, want: %v", err, tt.err)
+					t.Errorf("resolveAngleBrackets() returned an unexpected error: goot: %v", err)
+					t.Errorf("resolveAngleBrackets() returned an unexpected error: want: %v", tt.err)
+
 				}
 			} else {
 				if out != tt.expectString {
-					t.Errorf("resolveAngleBrackets() returned an unexpected string: got: %s, want: %s", out, tt.expectString)
+					t.Errorf("resolveAngleBrackets() returned an unexpected string: got: %v, want: %s", out, tt.expectString)
 				}
 			}
 		})
@@ -280,13 +318,25 @@ user = "{{ .USER }}-password"
 password = "linux-{{ .MYSQL_PASSWD }}"
 port = 4000`,
 		},
+		{
+			originalString: `type: S3
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: {{ .S3_ACCESS_KEY }}
+  secret_key: {{ .S3_SECRET_KEY }}`,
+			expectString: `type: S3
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: "{{ .S3_ACCESS_KEY }}"
+  secret_key: "{{ .S3_SECRET_KEY }}"`,
+		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.originalString, func(t *testing.T) {
+	for idx, tt := range tests {
+		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
 			out := addQuotesCurlyBraces(tt.originalString)
 			if out != tt.expectString {
-				t.Errorf("resolveAngleBrackets() returned an unexpected string: got: %v, want: %s", out, tt.expectString)
+				t.Errorf("addQuotesCurlyBraces() returned an unexpected string: got: %v, want: %s", out, tt.expectString)
 			}
 		})
 	}
