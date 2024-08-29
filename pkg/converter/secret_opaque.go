@@ -92,11 +92,13 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		for fileName, fileContent := range inputSecret.StringData {
 			// should ignore parse <% %> first
 			// because it has been resolved by argo-vault-cd
-			if resolvedValueFromEnv.MatchString(fileContent) {
-				continue
+			resolvedFileContent, err := resolved(fileContent)
+			if err != nil {
+				return nil, err
 			}
 
-			propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(fileContent), -1)
+			// map <>
+			propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(resolvedFileContent), -1)
 			if len(propertyFromSecretData) == 0 {
 				continue
 			}
@@ -113,8 +115,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 					})
 				}
 			}
-
-			newFileContentWithoutQuote, err := resolveAngleBrackets(fileContent)
+			newFileContentWithoutQuote, err := resolveAngleBrackets(resolvedFileContent)
 			if err != nil {
 				return nil, err
 			}

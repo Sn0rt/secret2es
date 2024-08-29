@@ -569,7 +569,7 @@ port = 4000`,
 			},
 		},
 		{
-			name: "opaque type secret with <% ENV %> with stringData and multiple stringData",
+			name: "stringData type secret with <% ENV %> and stringData and multiple",
 			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
@@ -596,8 +596,9 @@ port = 4000`,
 				Name: "tenant-b",
 			},
 			envs: map[string]string{
-				"DIST": "ubuntu",
-				"VER":  "22.04",
+				"DIST":            "ubuntu",
+				"VER":             "22.04",
+				"USER_SECRET_KEY": "secret_key",
 			},
 			expectExternalSecret: esv1beta1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
@@ -683,6 +684,105 @@ port = 4000`,
 				"VER":  "22.04",
 			},
 			err: fmt.Errorf(ErrCommonNotNeedRefData, "multiple_stringData_should_empty_ref"),
+		},
+		{
+			name: "both <% ENV %> and < KEY > from stringData",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "both_env_and_key_stringData",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"config.yaml": `type: S3
+prefix: "test/<% DIST %>"
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: <S3_ACCESS_KEY>
+  secret_key: <S3_SECRET_KEY>`,
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-b",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "both_env_and_key_stringData",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "tenant-b",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "S3_ACCESS_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "foo",
+								Property: "S3_ACCESS_KEY",
+							},
+						},
+						{
+							SecretKey: "S3_SECRET_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:      "foo",
+								Property: "S3_SECRET_KEY",
+							},
+						},
+					},
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "both_env_and_key_stringData",
+						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Annotations: map[string]string{
+									"avp.kubernetes.io/path": "secret/data/foo",
+								},
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyMerge,
+							Data: map[string]string{
+								"config.yaml": `type: S3
+prefix: "test/ubuntu"
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: "{{ .S3_ACCESS_KEY }}"
+  secret_key: "{{ .S3_SECRET_KEY }}"`,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 

@@ -52,7 +52,6 @@ func resolveAngleBrackets(s string) (string, error) {
 	var result strings.Builder
 	var temp strings.Builder
 	inBracket := false
-	lastCharWasSpace := false
 
 	for _, char := range s {
 		switch char {
@@ -62,7 +61,6 @@ func resolveAngleBrackets(s string) (string, error) {
 			}
 			inBracket = true
 			result.WriteString("{{ .")
-			lastCharWasSpace = false
 		case '>':
 			if !inBracket {
 				return s, fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `unpaired '>'`)
@@ -72,13 +70,11 @@ func resolveAngleBrackets(s string) (string, error) {
 			result.WriteString(trimmedVariable)
 			result.WriteString(" }}")
 			temp.Reset()
-			lastCharWasSpace = false
-		case ' ':
+		case ' ', '\n', '\r': // 处理空格和换行符
 			if inBracket {
 				temp.WriteRune(char)
-			} else if !lastCharWasSpace {
+			} else {
 				result.WriteRune(char)
-				lastCharWasSpace = true
 			}
 		default:
 			if inBracket {
@@ -86,12 +82,11 @@ func resolveAngleBrackets(s string) (string, error) {
 			} else {
 				result.WriteRune(char)
 			}
-			lastCharWasSpace = false
 		}
 	}
 
 	if inBracket {
-		return s, fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `syntax error: unclosed '<'`)
+		return s, fmt.Errorf(FileContentAngleBracketsParseSyntaxError, `unclosed '<'`)
 	}
 
 	return result.String(), nil
