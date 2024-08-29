@@ -59,8 +59,9 @@ jobs:
           source e2e/e2e.sh
           init_vault_kv_pair
 
-      - name: install 2 ClusterSecretStore
+      - name: install ClusterSecretStore(root, approle)
         run: |
+          sed -i 's/{ROLE_ID}/${{ env.ROLE_ID }}/g; s/{SECRET_ID}/${{ env.SECRET_ID }}/g' ./e2e/css_approle1.yaml
           source e2e/e2e.sh     
           install_cluster_secret_store
 
