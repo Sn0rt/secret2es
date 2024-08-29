@@ -54,12 +54,12 @@ jobs:
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=external-secrets-cert-controller --timeout=120s
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=vault --timeout=120s
 
-      - name: init vault
+      - name: set vault secret key and approle
         run: |
           source e2e/e2e.sh
           init_vault_kv_pair
 
-      - name: install ClusterSecretStore
+      - name: install 2 ClusterSecretStore
         run: |
           source e2e/e2e.sh     
           install_cluster_secret_store
