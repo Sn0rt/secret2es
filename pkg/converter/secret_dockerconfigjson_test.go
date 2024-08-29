@@ -11,7 +11,7 @@ import (
 func TestGenEsByDockerConfigJSON(t *testing.T) {
 	var tests = []struct {
 		name                 string
-		input                []byte
+		inputSecret          internalSecret
 		store                esv1beta1.SecretStoreRef
 		expectExternalSecret esv1beta1.ExternalSecret
 	}{
@@ -21,28 +21,34 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 				Name: "tenant-b",
 				Kind: "ClusterSecretStore",
 			},
-			input: []byte(`
-apiVersion: v1
-kind: Secret
-metadata:
-  name: input1
-  labels:
-    "app": "test"
-  annotations:
-    avp.kubernetes.io/path: "secret/data/test-foo"
-type: kubernetes.io/dockerconfigjson
-stringData:
-  .dockerconfigjson: |
-    {
-      "auths": {
-        "https://index.docker.io/v1": {
-          "auth": "<PASSWD_FROM_VAULT>"
-        },
-        "https://index.docker.io:8443/v1": {
-          "auth": "<PASSWD_FROM_VAULT>"
-        }      
-      }
-    }`),
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeDockerConfigJson,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "input1",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/test-foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					".dockerconfigjson": `{
+  "auths": {
+    "https://index.docker.io/v1": {
+      "auth": "<PASSWD_FROM_VAULT>"
+    },
+    "https://index.docker.io:8443/v1": {
+      "auth": "<PASSWD_FROM_VAULT>"
+    }
+  }
+}`,
+				},
+			},
 			expectExternalSecret: esv1beta1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "external-secrets.io/v1beta1",
@@ -76,7 +82,16 @@ stringData:
 							},
 							MergePolicy: esv1beta1.MergePolicyMerge,
 							Data: map[string]string{
-								".dockerconfigjson": `{"auths":{"https://index.docker.io/v1":{"auth":"{{ .PASSWD_FROM_VAULT }}"},"https://index.docker.io:8443/v1":{"auth":"{{ .PASSWD_FROM_VAULT }}"}}}`,
+								".dockerconfigjson": `{
+  "auths": {
+    "https://index.docker.io/v1": {
+      "auth": "{{ .PASSWD_FROM_VAULT }}"
+    },
+    "https://index.docker.io:8443/v1": {
+      "auth": "{{ .PASSWD_FROM_VAULT }}"
+    }
+  }
+}`,
 							},
 						},
 					},
@@ -100,8 +115,7 @@ stringData:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			inputSecretList, _ := parseUnstructuredSecret(tt.input)
-			out, err := convertSecret2ExtSecret(inputSecretList[0], tt.store.Kind, tt.store.Name)
+			out, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {

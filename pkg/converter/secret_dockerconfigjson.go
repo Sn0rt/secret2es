@@ -1,11 +1,11 @@
 package converter
 
 import (
+	"encoding/json"
 	"fmt"
 	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/json"
 	"strings"
 )
 
@@ -69,7 +69,7 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 		singleLoginfo.Auth = t
 		dockerloginfo.Auths[key] = singleLoginfo
 	}
-	var out, _ = json.Marshal(&dockerloginfo)
+	var out, _ = json.MarshalIndent(&dockerloginfo, "", "  ")
 	templateData[".dockerconfigjson"] = string(out)
 
 	return &esv1beta1.ExternalSecret{
