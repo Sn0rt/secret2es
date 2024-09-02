@@ -12,7 +12,7 @@ function build_secret2es() {
 }
 
 function generate_external_secret_template() {
-  ./secret2es es-gen -i e2e/templated.yaml -n tenant-b > e2e/render.yaml
+  ./secret2es es-gen -i e2e/templated.yaml -s ClusterSecretStore -n tenant-b > e2e/render.yaml
   return 0
 }
 
