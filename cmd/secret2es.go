@@ -62,7 +62,7 @@ func extSecretGenCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("input", "i", "", "Input path of corev1 secret file (required)")
-	cmd.Flags().StringP("storetype", "s", "ClusterSecretStore", "Store type (optional)")
+	cmd.Flags().StringP("storetype", "s", "SecretStore", "Store type (optional)")
 	cmd.Flags().StringP("storename", "n", "", "Store name (required)")
 
 	err := cmd.MarkFlagRequired("input")
