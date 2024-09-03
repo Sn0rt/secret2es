@@ -13,6 +13,7 @@ function build_secret2es() {
 
 function generate_external_secret_template() {
   ./secret2es es-gen -i e2e/templated.yaml -s ClusterSecretStore -n tenant-b > e2e/render.yaml
+  cat e2e/render.yaml
   return 0
 }
 
@@ -28,7 +29,7 @@ function wait_external_secret_template_ready() {
   done
   kubectl get es -o wide
 
-  echo "check approle secret"
+  echo "check AppRole secret"
   kubectl wait --for=condition=Ready=True es/approle1-secret --timeout=60s || (kubectl describe es/approle1-secret && return 1)
   return 0
 }
@@ -67,7 +68,7 @@ function get_secret_content() {
       kubectl get secret input"$i" -o jsonpath='{.data}' | jq -r 'to_entries[] | .key + "=" + (.value | @base64d)'
     done
 
-     kubectl get secret approle1-secret -o jsonpath='{.data}' | jq -r 'to_entries[] | .key + "=" + (.value | @base64d)'
+    kubectl get secret approle1-secret -o jsonpath='{.data}' | jq -r 'to_entries[] | .key + "=" + (.value | @base64d)'
     return 0
 }
 
