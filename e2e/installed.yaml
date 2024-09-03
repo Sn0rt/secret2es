@@ -41,7 +41,7 @@ type: Opaque
 data:
   dist: UkVsVFZGOVBSbDlPUVUxRlgweEpUbFZZQ2c9PQo= #DIST_OF_NAME_LINUX
   user: VVNFUl9OQU1FX09GX0dJVEhVQgo= #USER_NAME_OF_GITHUB
-  passwd: VE9LRU4K #TOKEN
+  passwd: VE9LRU4K #TOKEN' should not update
 ---
 apiVersion: v1
 kind: Secret

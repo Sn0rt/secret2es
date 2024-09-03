@@ -6,6 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"os"
 	"sigs.k8s.io/yaml"
+	"strings"
 )
 
 // ConvertSecret converts a Kubernetes Secret to an ExternalSecret
@@ -36,27 +37,50 @@ func ConvertSecret(inputFile, storeType, storeName string) error {
 		}
 
 		// remove the status field
-		yamlData = removeStatusField(yamlData)
 		fmt.Printf("---\n")
-		fmt.Printf("%s", yamlData)
+		fmt.Printf("%s", postProcessOutputES(yamlData))
 	}
 
 	return nil
 }
 
-func removeStatusField(yamlData []byte) []byte {
+func postProcessOutputES(yamlData []byte) string {
 	var externalSecret map[string]interface{}
 	if err := yaml.Unmarshal(yamlData, &externalSecret); err != nil {
-		return yamlData
+		return string(yamlData)
 	}
 
+	// 删除 status 字段
 	delete(externalSecret, "status")
+
+	// 处理 target.template.data 中的值
+	var needReplace = false
+	if spec, ok := externalSecret["spec"].(map[string]interface{}); ok {
+		if target, ok := spec["target"].(map[string]interface{}); ok {
+			if template, ok := target["template"].(map[string]interface{}); ok {
+				if data, ok := template["data"].(map[string]interface{}); ok {
+					for _, value := range data {
+						if valString, ok := value.(string); ok {
+							// if start with "{{ and end with }}" set a needReplace value
+							if strings.HasPrefix(valString, `"{{`) && strings.HasSuffix(valString, `}}"`) {
+								needReplace = true
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	newYamlData, err := yaml.Marshal(externalSecret)
 	if err != nil {
-		return yamlData
+		panic(err.Error())
 	}
-
-	return newYamlData
+	if needReplace {
+		removedLeft := strings.Replace(string(newYamlData), `'"{{`, `"{{`, -1)
+		return strings.Replace(removedLeft, `}}"'`, `}}"`, -1)
+	}
+	return string(newYamlData)
 }
 
 func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
