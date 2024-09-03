@@ -50,8 +50,11 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
 					SecretKey: output,
 					RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-						Key:      vaultSecretKey,
-						Property: output,
+						ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
+						DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
+						MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
+						Key:                vaultSecretKey,
+						Property:           output,
 					},
 				})
 			}

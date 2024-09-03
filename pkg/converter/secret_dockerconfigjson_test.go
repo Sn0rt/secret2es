@@ -103,8 +103,11 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 						{
 							SecretKey: "PASSWD_FROM_VAULT",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:      "test-foo",
-								Property: "PASSWD_FROM_VAULT",
+								Key:                "test-foo",
+								MetadataPolicy:     "None",
+								Property:           "PASSWD_FROM_VAULT",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
 							},
 						},
 					},

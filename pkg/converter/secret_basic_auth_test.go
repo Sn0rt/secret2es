@@ -114,15 +114,21 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 						{
 							SecretKey: "USER_ACCESS_KEY",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:      "test-foo",
-								Property: "USER_ACCESS_KEY",
+								Key:                "test-foo",
+								MetadataPolicy:     "None",
+								Property:           "USER_ACCESS_KEY",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
 							},
 						},
 						{
 							SecretKey: "USER_SECRET_KEY",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:      "test-foo",
-								Property: "USER_SECRET_KEY",
+								Key:                "test-foo",
+								MetadataPolicy:     "None",
+								Property:           "USER_SECRET_KEY",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
 							},
 						},
 					},
