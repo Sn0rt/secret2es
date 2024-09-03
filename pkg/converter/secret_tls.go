@@ -27,8 +27,11 @@ func generateEsByTLS(inputSecret *internalSecret, storeType, storeName string) (
 		externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
 			SecretKey: fileName,
 			RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-				Key:      vaultSecretKey,
-				Property: propertyFromSecretData[1],
+				ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
+				DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
+				MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
+				Key:                vaultSecretKey,
+				Property:           propertyFromSecretData[1],
 			},
 		})
 	}

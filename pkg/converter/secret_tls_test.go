@@ -64,8 +64,11 @@ data:
 						{
 							SecretKey: "tls.key",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:      "test-foo",
-								Property: "TLS_KEY_VAULT",
+								Key:                "test-foo",
+								MetadataPolicy:     "None",
+								Property:           "TLS_KEY_VAULT",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
 							},
 						},
 					},
@@ -122,8 +125,11 @@ data:
 						{
 							SecretKey: "tls.key",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:      "test-foo",
-								Property: "TLS_KEY_VAULT",
+								Key:                "test-foo",
+								MetadataPolicy:     "None",
+								Property:           "TLS_KEY_VAULT",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
 							},
 						},
 					},
@@ -193,8 +199,11 @@ data:
 						{
 							SecretKey: "tls.key",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:      "test-foo",
-								Property: "TLS_KEY_VAULT",
+								Key:                "test-foo",
+								MetadataPolicy:     "None",
+								Property:           "TLS_KEY_VAULT",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
 							},
 						},
 					},
