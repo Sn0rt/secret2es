@@ -362,7 +362,7 @@ port = 4000`,
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyMerge,
+							MergePolicy: esv1beta1.MergePolicyReplace,
 							Data: map[string]string{
 								"mylogin.conf": `[client]
 host = example.com
@@ -464,7 +464,7 @@ port = 4000`,
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyMerge,
+							MergePolicy: esv1beta1.MergePolicyReplace,
 							Data: map[string]string{
 								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
 								"sn0rt.github.io.default.secret_key": `"{{ .USER_SECRET_KEY }}"`,
@@ -677,7 +677,7 @@ port = 4000`,
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyMerge,
+							MergePolicy: esv1beta1.MergePolicyReplace,
 							Data: map[string]string{
 								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
 							},
@@ -809,7 +809,7 @@ config:
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyMerge,
+							MergePolicy: esv1beta1.MergePolicyReplace,
 							Data: map[string]string{
 								"config.yaml": `type: S3
 prefix: "test/ubuntu"
