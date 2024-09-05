@@ -52,7 +52,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 				SecretKey: key,
 				RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 					ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
-					DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
+					DecodingStrategy:   esv1beta1.ExternalSecretDecodeAuto,
 					MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
 					Key:                vaultSecretKey,
 					Property:           propertyFromSecretData[1],
