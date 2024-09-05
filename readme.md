@@ -65,8 +65,6 @@ make build
 
 1. the `label` and `annotation` of the secret has not been created if it has been set with `ExternalSecret` CRD.
 
-2. Because the Rewriting Keys in DataFrom feature provided by External secret is too complex, and the current implementation is to simply use Data instead of DataFrom. This is simple to implement. But the disadvantage is that there will be an extra k-v pair in the secret.
-
 ## License
 
 BSD-3
