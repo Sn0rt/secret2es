@@ -79,28 +79,23 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/test-foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "input1",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeBasicAuth,
 							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Annotations: map[string]string{
-									"avp.kubernetes.io/path": "secret/data/test-foo",
-								},
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyMerge,
+							MergePolicy: esv1beta1.MergePolicyReplace,
 							Data: map[string]string{
+								"host":     "localhost.local",
 								"username": `"{{ .USER_ACCESS_KEY }}"`,
 								"password": `"sn0rt_{{ .USER_SECRET_KEY }}"`,
 							},

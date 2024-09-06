@@ -45,15 +45,12 @@ data:
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/test-foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "tls_secret_case1",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -106,15 +103,12 @@ data:
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/test-foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "open-source-secret-with-github-action-test-sn0rt-dev",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -180,15 +174,12 @@ data:
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/test-foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "open-source-secret-with-github-action-test-sn0rt-dev",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
