@@ -82,7 +82,7 @@ func generateEsByBasicAuthSecret(inputSecret *internalSecret, storeType, storeNa
 					Metadata: esv1beta1.ExternalSecretTemplateMetadata{
 						Labels: inputSecret.ObjectMeta.Labels,
 					},
-					MergePolicy: esv1beta1.MergePolicyMerge,
+					MergePolicy: esv1beta1.MergePolicyReplace,
 					Data:        templateData,
 				},
 			},

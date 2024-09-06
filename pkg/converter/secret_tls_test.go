@@ -45,9 +45,6 @@ data:
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/test-foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
@@ -105,9 +102,6 @@ data:
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
-					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/test-foo",
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
@@ -179,9 +173,6 @@ data:
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
-					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/test-foo",
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{

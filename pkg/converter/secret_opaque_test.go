@@ -80,9 +80,6 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
@@ -90,6 +87,18 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 						Name:           "simple_example",
 						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"dist": `"{{ .dist-name-of-linux }}"`,
+							},
+						},
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "test",
@@ -97,7 +106,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					},
 					Data: []esv1beta1.ExternalSecretData{
 						{
-							SecretKey: "dist",
+							SecretKey: "dist-name-of-linux",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
@@ -150,9 +159,6 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
@@ -160,6 +166,12 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 						Name:           "multiple_env_with_path",
 						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type:        corev1.SecretTypeOpaque,
+							Metadata:    esv1beta1.ExternalSecretTemplateMetadata{Labels: map[string]string{"app": "test"}},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data:        map[string]string{"dist": `"{{ .dist-name-of-linux }}"`},
+						},
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "test",
@@ -167,7 +179,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					},
 					Data: []esv1beta1.ExternalSecretData{
 						{
-							SecretKey: "dist",
+							SecretKey: "dist-name-of-linux",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
@@ -222,9 +234,6 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
@@ -232,6 +241,20 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 						Name:           "multiple_property",
 						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"dist":   `"{{ .dist-name-of-linux }}"`,
+								"passwd": `"{{ .github-passwd }}"`,
+								"user":   `"{{ .github-username }}"`,
+							},
+						},
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "test",
@@ -239,7 +262,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					},
 					Data: []esv1beta1.ExternalSecretData{
 						{
-							SecretKey: "dist",
+							SecretKey: "dist-name-of-linux",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
@@ -249,7 +272,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 							},
 						},
 						{
-							SecretKey: "user",
+							SecretKey: "github-username",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
@@ -259,7 +282,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 							},
 						},
 						{
-							SecretKey: "passwd",
+							SecretKey: "github-passwd",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
@@ -316,9 +339,6 @@ port = 4000`,
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
@@ -355,9 +375,6 @@ port = 4000`,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
 							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Annotations: map[string]string{
-									"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
-								},
 								Labels: map[string]string{
 									"app": "test",
 								},
@@ -396,7 +413,7 @@ port = 4000`,
 					"sn0rt.github.io.default.access_key": "< USER_ACCESS_KEY >",
 					"sn0rt.github.io.default.secret_key": "<USER_SECRET_KEY>",
 					"sn0rt.github.io.default.cmt":        "sn0rt-<USER_SECRET_KEY>",
-					"sn0rt.github.io.default.key":        "key", // merge policy should ignore this
+					"sn0rt.github.io.default.key":        "key",
 				},
 			},
 			store: esv1beta1.SecretStoreRef{
@@ -417,9 +434,6 @@ port = 4000`,
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
-					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
@@ -457,9 +471,6 @@ port = 4000`,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
 							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Annotations: map[string]string{
-									"avp.kubernetes.io/path": "secret/data/ubuntu-22.04-foo",
-								},
 								Labels: map[string]string{
 									"app": "test",
 								},
@@ -469,6 +480,7 @@ port = 4000`,
 								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
 								"sn0rt.github.io.default.secret_key": `"{{ .USER_SECRET_KEY }}"`,
 								"sn0rt.github.io.default.cmt":        `"sn0rt-{{ .USER_SECRET_KEY }}"`,
+								"sn0rt.github.io.default.key":        "key",
 							},
 						},
 					},
@@ -557,6 +569,9 @@ port = 4000`,
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+			},
 			expectExternalSecret: esv1beta1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "external-secrets.io/v1beta1",
@@ -568,9 +583,6 @@ port = 4000`,
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
@@ -578,6 +590,19 @@ port = 4000`,
 						Name:           "set_env_with_body_no_gen_es_2",
 						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"data2": "ubuntu",
+								"data3": `"{{ .FROM_VAULT_DATA3 }}"`,
+							},
+						},
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "test",
@@ -585,7 +610,7 @@ port = 4000`,
 					},
 					Data: []esv1beta1.ExternalSecretData{
 						{
-							SecretKey: "data3",
+							SecretKey: "FROM_VAULT_DATA3",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
@@ -618,7 +643,7 @@ port = 4000`,
 				StringData: map[string]string{
 					"sn0rt.github.io.default.access_key": "<USER_ACCESS_KEY>",
 					"sn0rt.github.io.default.secret_key": "<% USER_SECRET_KEY %>",
-					"sn0rt.github.io.default.key":        "key", // merge policy should ignore this
+					"sn0rt.github.io.default.key":        "key",
 				},
 			},
 			store: esv1beta1.SecretStoreRef{
@@ -640,9 +665,6 @@ port = 4000`,
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
-					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/foo",
 					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
@@ -670,9 +692,6 @@ port = 4000`,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
 							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Annotations: map[string]string{
-									"avp.kubernetes.io/path": "secret/data/foo",
-								},
 								Labels: map[string]string{
 									"app": "test",
 								},
@@ -680,6 +699,8 @@ port = 4000`,
 							MergePolicy: esv1beta1.MergePolicyReplace,
 							Data: map[string]string{
 								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
+								"sn0rt.github.io.default.key":        "key",
+								"sn0rt.github.io.default.secret_key": "secret_key",
 							},
 						},
 					},
@@ -763,9 +784,6 @@ config:
 					Labels: map[string]string{
 						"app": "test",
 					},
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/foo",
-					},
 				},
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
@@ -802,9 +820,6 @@ config:
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
 							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Annotations: map[string]string{
-									"avp.kubernetes.io/path": "secret/data/foo",
-								},
 								Labels: map[string]string{
 									"app": "test",
 								},
