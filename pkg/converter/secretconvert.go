@@ -53,10 +53,19 @@ func postProcessOutputES(yamlData []byte) string {
 	// delete status 字段
 	delete(externalSecret, "status")
 
-	//delete metadata.creationTimestamp of yamlData
+	// delete metadata.creationTimestamp of yamlData
 	if metadata, ok := externalSecret["metadata"].(map[string]interface{}); ok {
 		delete(metadata, "creationTimestamp")
 		externalSecret["metadata"] = metadata
+	}
+
+	// delete .spec.target.template.metadata
+	if spec, ok := externalSecret["spec"].(map[string]interface{}); ok {
+		if target, ok := spec["target"].(map[string]interface{}); ok {
+			if template, ok := target["template"].(map[string]interface{}); ok {
+				delete(template, "metadata")
+			}
+		}
 	}
 
 	// 处理 target.template.data 中的值
