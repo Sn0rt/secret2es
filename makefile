@@ -12,6 +12,9 @@ LDFLAGS=-ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}"
 
 all: test build
 
+print-binary-name:
+	@echo $(BINARY_NAME)
+
 build:
 	$(GOBUILD) -v -o $(BINARY_NAME) ${LDFLAGS} cmd/secret2es.go
 
