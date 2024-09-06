@@ -50,8 +50,14 @@ func postProcessOutputES(yamlData []byte) string {
 		return string(yamlData)
 	}
 
-	// 删除 status 字段
+	// delete status 字段
 	delete(externalSecret, "status")
+
+	//delete metadata.creationTimestamp of yamlData
+	if metadata, ok := externalSecret["metadata"].(map[string]interface{}); ok {
+		delete(metadata, "creationTimestamp")
+		externalSecret["metadata"] = metadata
+	}
 
 	// 处理 target.template.data 中的值
 	var needReplace = false
