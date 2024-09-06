@@ -72,8 +72,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		}
 	case opaqueStringDataType:
 		for fileName, fileContent := range inputSecret.StringData {
-			// should ignore parse <% %> first
-			// because it has been resolved by argo-vault-cd
+			// should resolve <% %> in static value
 			resolvedFileContent, err := resolved(fileContent)
 			if err != nil {
 				return nil, err

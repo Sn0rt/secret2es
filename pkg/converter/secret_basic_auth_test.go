@@ -95,6 +95,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 							},
 							MergePolicy: esv1beta1.MergePolicyReplace,
 							Data: map[string]string{
+								"host":     "localhost.local",
 								"username": `"{{ .USER_ACCESS_KEY }}"`,
 								"password": `"sn0rt_{{ .USER_SECRET_KEY }}"`,
 							},
