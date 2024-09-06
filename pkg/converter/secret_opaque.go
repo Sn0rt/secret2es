@@ -69,10 +69,9 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 				Kind:       "ExternalSecret",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        inputSecret.Name,
-				Namespace:   inputSecret.Namespace,
-				Labels:      inputSecret.ObjectMeta.Labels,
-				Annotations: inputSecret.Annotations,
+				Name:      inputSecret.Name,
+				Namespace: inputSecret.Namespace,
+				Labels:    inputSecret.ObjectMeta.Labels,
 			},
 			Spec: esv1beta1.ExternalSecretSpec{
 				RefreshInterval: stopRefreshInterval,
@@ -82,7 +81,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 				},
 				Target: esv1beta1.ExternalSecretTarget{
 					Name:           inputSecret.Name,
-					CreationPolicy: esv1beta1.CreatePolicyMerge,
+					CreationPolicy: esv1beta1.CreatePolicyOrphan,
 					DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 				},
 				Data: externalSecretData,
@@ -139,10 +138,9 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 				Kind:       "ExternalSecret",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        inputSecret.Name,
-				Namespace:   inputSecret.Namespace,
-				Labels:      inputSecret.ObjectMeta.Labels,
-				Annotations: inputSecret.Annotations,
+				Name:      inputSecret.Name,
+				Namespace: inputSecret.Namespace,
+				Labels:    inputSecret.ObjectMeta.Labels,
 			},
 			Spec: esv1beta1.ExternalSecretSpec{
 				RefreshInterval: stopRefreshInterval,
@@ -152,13 +150,12 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 				},
 				Target: esv1beta1.ExternalSecretTarget{
 					Name:           inputSecret.Name,
-					CreationPolicy: esv1beta1.CreatePolicyMerge,
+					CreationPolicy: esv1beta1.CreatePolicyOrphan,
 					DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					Template: &esv1beta1.ExternalSecretTemplate{
 						Type: corev1.SecretTypeOpaque,
 						Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-							Annotations: inputSecret.Annotations,
-							Labels:      inputSecret.ObjectMeta.Labels,
+							Labels: inputSecret.ObjectMeta.Labels,
 						},
 						MergePolicy: esv1beta1.MergePolicyReplace,
 						Data:        templateData,

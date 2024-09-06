@@ -81,10 +81,9 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 			Kind:       "ExternalSecret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        inputSecret.Name,
-			Namespace:   inputSecret.Namespace,
-			Labels:      inputSecret.ObjectMeta.Labels,
-			Annotations: inputSecret.Annotations,
+			Name:      inputSecret.Name,
+			Namespace: inputSecret.Namespace,
+			Labels:    inputSecret.ObjectMeta.Labels,
 		},
 		Spec: esv1beta1.ExternalSecretSpec{
 			RefreshInterval: stopRefreshInterval,
@@ -94,13 +93,12 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 			},
 			Target: esv1beta1.ExternalSecretTarget{
 				Name:           inputSecret.Name,
-				CreationPolicy: esv1beta1.CreatePolicyMerge,
+				CreationPolicy: esv1beta1.CreatePolicyOrphan,
 				DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 				Template: &esv1beta1.ExternalSecretTemplate{
 					Type: corev1.SecretTypeDockerConfigJson,
 					Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-						Annotations: inputSecret.Annotations,
-						Labels:      inputSecret.ObjectMeta.Labels,
+						Labels: inputSecret.ObjectMeta.Labels,
 					},
 					MergePolicy: esv1beta1.MergePolicyMerge,
 					Data:        templateData,

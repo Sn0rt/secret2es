@@ -53,7 +53,7 @@ data:
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "tls_secret_case1",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -114,7 +114,7 @@ data:
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "open-source-secret-with-github-action-test-sn0rt-dev",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -188,7 +188,7 @@ data:
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "open-source-secret-with-github-action-test-sn0rt-dev",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{

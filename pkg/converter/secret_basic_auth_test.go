@@ -87,7 +87,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "input1",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeBasicAuth,

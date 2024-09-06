@@ -88,7 +88,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "simple_example",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -158,7 +158,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "multiple_env_with_path",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -230,7 +230,7 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "multiple_property",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -350,7 +350,7 @@ port = 4000`,
 					},
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "string_data_example",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
@@ -452,7 +452,7 @@ port = 4000`,
 					},
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "string_data_multiple_example",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
@@ -576,7 +576,7 @@ port = 4000`,
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "set_env_with_body_no_gen_es_2",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
@@ -665,7 +665,7 @@ port = 4000`,
 					},
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "multiple_example_env_with_stringData",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
@@ -797,7 +797,7 @@ config:
 					},
 					Target: esv1beta1.ExternalSecretTarget{
 						Name:           "both_env_and_key_stringData",
-						CreationPolicy: esv1beta1.CreatePolicyMerge,
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
