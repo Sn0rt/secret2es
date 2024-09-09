@@ -18,7 +18,7 @@ const (
 	opaqueStringDataType
 )
 
-func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy) (*esv1beta1.ExternalSecret, error) {
 	var currentSecretOpaqueSubType int
 	if len(inputSecret.Data) != 0 {
 		currentSecretOpaqueSubType = opaqueDataType
@@ -131,7 +131,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			},
 			Target: esv1beta1.ExternalSecretTarget{
 				Name:           inputSecret.Name,
-				CreationPolicy: esv1beta1.CreatePolicyOrphan,
+				CreationPolicy: creationPolicy,
 				DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 				Template: &esv1beta1.ExternalSecretTemplate{
 					Type: corev1.SecretTypeOpaque,

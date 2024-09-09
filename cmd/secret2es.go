@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -53,7 +54,15 @@ func extSecretGenCmd() *cobra.Command {
 			if storeName == "" {
 				return fmt.Errorf("store name is required")
 			}
-			err = converter.ConvertSecret(inputPath, storeType, storeName)
+			creationPolicy, err := cmd.Flags().GetString("creation-policy")
+			if err != nil {
+				return err
+			}
+			if creationPolicy == "" {
+				return fmt.Errorf("creation policy is required")
+			}
+
+			err = converter.ConvertSecret(inputPath, storeType, storeName, esv1beta1.ExternalSecretCreationPolicy(creationPolicy))
 			if err != nil {
 				return err
 			}
@@ -64,6 +73,7 @@ func extSecretGenCmd() *cobra.Command {
 	cmd.Flags().StringP("input", "i", "", "Input path of corev1 secret file (required)")
 	cmd.Flags().StringP("storetype", "s", "SecretStore", "Store type (optional)")
 	cmd.Flags().StringP("storename", "n", "", "Store name (required)")
+	cmd.Flags().StringP("creation-policy", "c", "Orphan", "Create policy (default: Orphan), only Owner, Orphan")
 
 	err := cmd.MarkFlagRequired("input")
 	if err != nil {

@@ -144,7 +144,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan)
 			if err != nil {
 				if tt.err == nil {
 					t.Errorf("unexpected error: %v", err)
