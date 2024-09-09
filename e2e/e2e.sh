@@ -23,7 +23,7 @@ function apply_external_secret_template() {
 }
 
 function wait_external_secret_template_ready() {
-  for i in $(seq 1 7);
+  for i in $(seq 1 9);
   do
     kubectl wait --for=condition=Ready=True es/input"$i" --timeout=60s || (kubectl describe es/input"$i" && return 1)
   done

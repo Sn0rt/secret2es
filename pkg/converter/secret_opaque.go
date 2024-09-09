@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"encoding/base64"
 	"fmt"
 	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -50,6 +51,11 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			} else {
 				propertyFromSecretData := captureFromFile.FindStringSubmatch(value)
 				if len(propertyFromSecretData) == 0 {
+					if IsBase64(value) {
+						templateData[key] = fmt.Sprintf(`{{ "%s" | b64dec }}`, value)
+					} else {
+						templateData[key] = value
+					}
 					continue
 				}
 				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
@@ -145,6 +151,11 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			Data: externalSecretData,
 		},
 	}, nil
+}
+
+func IsBase64(s string) bool {
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
 }
 
 func contains(data []esv1beta1.ExternalSecretData, output string) bool {

@@ -599,6 +599,7 @@ port = 4000`,
 							},
 							MergePolicy: esv1beta1.MergePolicyReplace,
 							Data: map[string]string{
+								"data1": "data1",
 								"data2": "ubuntu",
 								"data3": `"{{ .FROM_VAULT_DATA3 }}"`,
 							},
