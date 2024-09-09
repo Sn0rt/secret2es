@@ -10,7 +10,7 @@ import (
 )
 
 // ConvertSecret converts a Kubernetes Secret to an ExternalSecret
-func ConvertSecret(inputFile, storeType, storeName string) error {
+func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy) error {
 	bytes, err := os.ReadFile(inputFile)
 	if err != nil {
 		return fmt.Errorf("error reading inputSecret file: %w", err)
@@ -22,7 +22,7 @@ func ConvertSecret(inputFile, storeType, storeName string) error {
 	}
 
 	for _, inputSecret := range inputSecretList {
-		externalSecret, err := convertSecret2ExtSecret(inputSecret, storeType, storeName)
+		externalSecret, err := convertSecret2ExtSecret(inputSecret, storeType, storeName, creationPolicy)
 		// handle error
 		if err != nil {
 			switch err.Error() {
@@ -98,7 +98,7 @@ func postProcessOutputES(yamlData []byte) string {
 	return string(newYamlData)
 }
 
-func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName string, createPolicy esv1beta1.ExternalSecretCreationPolicy) (*esv1beta1.ExternalSecret, error) {
 	if err := secretCommonVerify(inputSecret); err != nil {
 		return nil, err
 	}
@@ -106,6 +106,12 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 	if storeType != SecretStoreType &&
 		storeType != ClusterSecretStoreType {
 		return nil, fmt.Errorf(illegalStoreType, storeType)
+	}
+
+	if createPolicy != esv1beta1.CreatePolicyOwner &&
+		createPolicy != esv1beta1.CreatePolicyOrphan &&
+		createPolicy != esv1beta1.CreatePolicyMerge {
+		return nil, fmt.Errorf(illegalCreatePolicy, createPolicy)
 	}
 
 	// get the secret of vault path
@@ -117,13 +123,13 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 
 	switch inputSecret.Type {
 	case corev1.SecretTypeOpaque:
-		return generateEsByOpaqueSecret(&inputSecret, storeType, storeName)
+		return generateEsByOpaqueSecret(&inputSecret, storeType, storeName, createPolicy)
 	case corev1.SecretTypeBasicAuth:
-		return generateEsByBasicAuthSecret(&inputSecret, storeType, storeName)
+		return generateEsByBasicAuthSecret(&inputSecret, storeType, storeName, createPolicy)
 	case corev1.SecretTypeDockerConfigJson:
-		return generateEsByDockerConfigJSON(&inputSecret, storeType, storeName)
+		return generateEsByDockerConfigJSON(&inputSecret, storeType, storeName, createPolicy)
 	case corev1.SecretTypeTLS:
-		return generateEsByTLS(&inputSecret, storeType, storeName)
+		return generateEsByTLS(&inputSecret, storeType, storeName, createPolicy)
 	}
 
 	return nil, fmt.Errorf(NotImplSecretType, inputSecret.Type, inputSecret.Name)

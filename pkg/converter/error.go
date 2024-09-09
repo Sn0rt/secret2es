@@ -12,7 +12,7 @@ const (
 	NotImplSecretType                          = "not impl %s secret type of secret: %s"
 	illegalStoreType                           = "illegal store type: %s"
 	illegalVaultPath                           = "illegal vault path: %s"
-	NotSupportedSecretData                     = "secret support only Data or stringData: %s"
+	illegalCreatePolicy                        = "illegal create policy: %s, only support Owner, Orphan"
 	FileContentAngleBracketsParseSyntaxError   = "template syntax error: %s"
 )
 

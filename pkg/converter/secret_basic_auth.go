@@ -6,7 +6,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func generateEsByBasicAuthSecret(inputSecret *internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByBasicAuthSecret(inputSecret *internalSecret, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy) (*esv1beta1.ExternalSecret, error) {
 	if len(inputSecret.Data) != 0 {
 		return nil, fmt.Errorf(ErrBasicAuthNotAllowDataField, inputSecret.Name)
 	}
@@ -17,7 +17,7 @@ func generateEsByBasicAuthSecret(inputSecret *internalSecret, storeType, storeNa
 		return nil, fmt.Errorf(ErrBasicAuthWithEmptyPassword, inputSecret.Name)
 	}
 
-	output, err := generateEsByOpaqueSecret(inputSecret, storeType, storeName)
+	output, err := generateEsByOpaqueSecret(inputSecret, storeType, storeName, creationPolicy)
 	if err != nil {
 		return nil, err
 	}

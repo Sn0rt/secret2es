@@ -17,7 +17,7 @@ type Auths struct {
 	Auths map[string]Auth `json:"auths"`
 }
 
-func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeName string) (*esv1beta1.ExternalSecret, error) {
+func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy) (*esv1beta1.ExternalSecret, error) {
 	if len(inputSecret.Data) != 0 {
 		return nil, fmt.Errorf(ErrDockerConfigJsonAcceptOnlyDataFields, inputSecret.Name)
 	}
@@ -93,7 +93,7 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 			},
 			Target: esv1beta1.ExternalSecretTarget{
 				Name:           inputSecret.Name,
-				CreationPolicy: esv1beta1.CreatePolicyOrphan,
+				CreationPolicy: creationPolicy,
 				DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 				Template: &esv1beta1.ExternalSecretTemplate{
 					Type: corev1.SecretTypeDockerConfigJson,
