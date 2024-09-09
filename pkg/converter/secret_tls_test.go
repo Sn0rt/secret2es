@@ -3,6 +3,7 @@ package converter
 import (
 	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	"github.com/google/go-cmp/cmp"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
@@ -52,6 +53,19 @@ data:
 						Name:           "tls_secret_case1",
 						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeTLS,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"tls.crt": `{{ "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNyakNDQVpZQ0NRQ1N4TjdEbUl3OVRqQU5CZ2txaGtpRzl3MEJBUXNGQURBWk1SY3dGUVlEVlFRRERBNTUKYjNWeVpHOXRZV2x1TG1OdmJUQWVGdzB5TkRBNE1qWXdOakV4TlRKYUZ3MHlOVEE0TWpZd05qRXhOVEphTUJreApGekFWQmdOVkJBTU1Ebmx2ZFhKa2IyMWhhVzR1WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBCk1JSUJDZ0tDQVFFQXpJZDZDMU12ZkN3V0xDanNnejEwa29Ga3M2RklIbHlVNElwUDVtcitERVRGTnFKT1p6dnoKZStreGFFNjBsYkNhVDV6U2YxZDllQWM0M0t2b0w1eXBieUxWVGJjdCtlNnNYMm9rbWlzdGtxUmRxcjNtMm9hSAoyY3pKeUhEVVpyT3Z6SkRHTDJoNGdUdE03QXpsb3VaN3ViOGZNQUJDR3B5bUppNjlzMEZRQ21DakltWUdxcm02CnlpOU83VXp4bTlabmgzUWhXZ2xzbFJuS05oVUhzdHIxbnQ0K1NsMWU2TEhBbHJtTzF5eVJHUmphdHh1d1NKYTMKTUZKeFJnTHRWbnlMNzJmTWY3c1R3RzcrbDVXMmhsM2x5QW1yeGpORnIvMGJ6WHBVZHFnc0dObW84Ny80NmdSego1UFMrZVc5UzNwVDZPN2NkUlQzcTB3NVk2VUhidGdIQ3d3SURBUUFCTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCCkFRQU1HS3paS2ZsTllwRkpDczNMMEt6TFgrWmEzdG9jQUlBODFjQXU0NzNEem9uc1B3cEZaUnRPeVAzV0Foc0EKalpNcitnaVhkY3lvWjVEQTdEUkkxN0UxSDduZTFiaDR6RmtYRE1HdGQxdnZXM0xQNVlhb2NxUjlzdGMyL3A0dgpxVE03bjZ0alRqY2RYNEQ2eG5KSHRzbmF1dVBwTUdiTzUwK04yK3JobU1NbjZPVmpFRkgrRWlQYmYzNWtSbkhXCi83ZnowWnVtYkxwNUlqdWFjSFM2YXJwR25KNGZON1I2NVNHa0FpNEtvMFZ6VTNNM1laclFneFdpK29aTHpTUHUKUUZveWpYRlgvQlhBRG9vaEFuTlpkN2FmVmFaMlU3MjJqaEpKaEkxM0tobHRXb2RUT2hQVytabWxYeHZmRy9acwprdU1SVmZraHowaGlQWGtMWUVvQTZlN3MKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=" | b64dec }}`,
+								"tls.key": `"{{ .TLS_KEY_VAULT }}"`,
+							},
+						},
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "tenant-b",
@@ -59,13 +73,13 @@ data:
 					},
 					Data: []esv1beta1.ExternalSecretData{
 						{
-							SecretKey: "tls.key",
+							SecretKey: "TLS_KEY_VAULT",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "test-foo",
 								MetadataPolicy:     "None",
 								Property:           "TLS_KEY_VAULT",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 					},
@@ -110,6 +124,19 @@ data:
 						Name:           "open-source-secret-with-github-action-test-sn0rt-dev",
 						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeTLS,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"tls.crt": `{{ "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNyakNDQVpZQ0NRQ1N4TjdEbUl3OVRqQU5CZ2txaGtpRzl3MEJBUXNGQURBWk1SY3dGUVlEVlFRRERBNTUKYjNWeVpHOXRZV2x1TG1OdmJUQWVGdzB5TkRBNE1qWXdOakV4TlRKYUZ3MHlOVEE0TWpZd05qRXhOVEphTUJreApGekFWQmdOVkJBTU1Ebmx2ZFhKa2IyMWhhVzR1WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBCk1JSUJDZ0tDQVFFQXpJZDZDMU12ZkN3V0xDanNnejEwa29Ga3M2RklIbHlVNElwUDVtcitERVRGTnFKT1p6dnoKZStreGFFNjBsYkNhVDV6U2YxZDllQWM0M0t2b0w1eXBieUxWVGJjdCtlNnNYMm9rbWlzdGtxUmRxcjNtMm9hSAoyY3pKeUhEVVpyT3Z6SkRHTDJoNGdUdE03QXpsb3VaN3ViOGZNQUJDR3B5bUppNjlzMEZRQ21DakltWUdxcm02CnlpOU83VXp4bTlabmgzUWhXZ2xzbFJuS05oVUhzdHIxbnQ0K1NsMWU2TEhBbHJtTzF5eVJHUmphdHh1d1NKYTMKTUZKeFJnTHRWbnlMNzJmTWY3c1R3RzcrbDVXMmhsM2x5QW1yeGpORnIvMGJ6WHBVZHFnc0dObW84Ny80NmdSego1UFMrZVc5UzNwVDZPN2NkUlQzcTB3NVk2VUhidGdIQ3d3SURBUUFCTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCCkFRQU1HS3paS2ZsTllwRkpDczNMMEt6TFgrWmEzdG9jQUlBODFjQXU0NzNEem9uc1B3cEZaUnRPeVAzV0Foc0EKalpNcitnaVhkY3lvWjVEQTdEUkkxN0UxSDduZTFiaDR6RmtYRE1HdGQxdnZXM0xQNVlhb2NxUjlzdGMyL3A0dgpxVE03bjZ0alRqY2RYNEQ2eG5KSHRzbmF1dVBwTUdiTzUwK04yK3JobU1NbjZPVmpFRkgrRWlQYmYzNWtSbkhXCi83ZnowWnVtYkxwNUlqdWFjSFM2YXJwR25KNGZON1I2NVNHa0FpNEtvMFZ6VTNNM1laclFneFdpK29aTHpTUHUKUUZveWpYRlgvQlhBRG9vaEFuTlpkN2FmVmFaMlU3MjJqaEpKaEkxM0tobHRXb2RUT2hQVytabWxYeHZmRy9acwprdU1SVmZraHowaGlQWGtMWUVvQTZlN3MKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=" | b64dec }}`,
+								"tls.key": `"{{ .TLS_KEY_VAULT }}"`,
+							},
+						},
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "tenant-b",
@@ -117,13 +144,13 @@ data:
 					},
 					Data: []esv1beta1.ExternalSecretData{
 						{
-							SecretKey: "tls.key",
+							SecretKey: "TLS_KEY_VAULT",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "test-foo",
 								MetadataPolicy:     "None",
 								Property:           "TLS_KEY_VAULT",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 					},
@@ -181,6 +208,19 @@ data:
 						Name:           "open-source-secret-with-github-action-test-sn0rt-dev",
 						CreationPolicy: esv1beta1.CreatePolicyOrphan,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeTLS,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"tls.crt": `{{ "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNyakNDQVpZQ0NRQ1N4TjdEbUl3OVRqQU5CZ2txaGtpRzl3MEJBUXNGQURBWk1SY3dGUVlEVlFRRERBNTUKYjNWeVpHOXRZV2x1TG1OdmJUQWVGdzB5TkRBNE1qWXdOakV4TlRKYUZ3MHlOVEE0TWpZd05qRXhOVEphTUJreApGekFWQmdOVkJBTU1Ebmx2ZFhKa2IyMWhhVzR1WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCQVFFRkFBT0NBUThBCk1JSUJDZ0tDQVFFQXpJZDZDMU12ZkN3V0xDanNnejEwa29Ga3M2RklIbHlVNElwUDVtcitERVRGTnFKT1p6dnoKZStreGFFNjBsYkNhVDV6U2YxZDllQWM0M0t2b0w1eXBieUxWVGJjdCtlNnNYMm9rbWlzdGtxUmRxcjNtMm9hSAoyY3pKeUhEVVpyT3Z6SkRHTDJoNGdUdE03QXpsb3VaN3ViOGZNQUJDR3B5bUppNjlzMEZRQ21DakltWUdxcm02CnlpOU83VXp4bTlabmgzUWhXZ2xzbFJuS05oVUhzdHIxbnQ0K1NsMWU2TEhBbHJtTzF5eVJHUmphdHh1d1NKYTMKTUZKeFJnTHRWbnlMNzJmTWY3c1R3RzcrbDVXMmhsM2x5QW1yeGpORnIvMGJ6WHBVZHFnc0dObW84Ny80NmdSego1UFMrZVc5UzNwVDZPN2NkUlQzcTB3NVk2VUhidGdIQ3d3SURBUUFCTUEwR0NTcUdTSWIzRFFFQkN3VUFBNElCCkFRQU1HS3paS2ZsTllwRkpDczNMMEt6TFgrWmEzdG9jQUlBODFjQXU0NzNEem9uc1B3cEZaUnRPeVAzV0Foc0EKalpNcitnaVhkY3lvWjVEQTdEUkkxN0UxSDduZTFiaDR6RmtYRE1HdGQxdnZXM0xQNVlhb2NxUjlzdGMyL3A0dgpxVE03bjZ0alRqY2RYNEQ2eG5KSHRzbmF1dVBwTUdiTzUwK04yK3JobU1NbjZPVmpFRkgrRWlQYmYzNWtSbkhXCi83ZnowWnVtYkxwNUlqdWFjSFM2YXJwR25KNGZON1I2NVNHa0FpNEtvMFZ6VTNNM1laclFneFdpK29aTHpTUHUKUUZveWpYRlgvQlhBRG9vaEFuTlpkN2FmVmFaMlU3MjJqaEpKaEkxM0tobHRXb2RUT2hQVytabWxYeHZmRy9acwprdU1SVmZraHowaGlQWGtMWUVvQTZlN3MKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=" | b64dec }}`,
+								"tls.key": `"{{ .TLS_KEY_VAULT }}"`,
+							},
+						},
 					},
 					SecretStoreRef: esv1beta1.SecretStoreRef{
 						Name: "tenant-b",
@@ -188,13 +228,13 @@ data:
 					},
 					Data: []esv1beta1.ExternalSecretData{
 						{
-							SecretKey: "tls.key",
+							SecretKey: "TLS_KEY_VAULT",
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								Key:                "test-foo",
 								MetadataPolicy:     "None",
 								Property:           "TLS_KEY_VAULT",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 					},
