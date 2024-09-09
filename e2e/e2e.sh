@@ -63,7 +63,7 @@ function wait_external_secret_synced() {
 }
 
 function get_secret_content() {
-    for i in $(seq 1 7);
+    for i in $(seq 1 9);
     do
       kubectl get secret input"$i" -o jsonpath='{.data}' | jq -r 'to_entries[] | .key + "=" + (.value | @base64d)'
     done
