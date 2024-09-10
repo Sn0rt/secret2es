@@ -354,7 +354,7 @@ port = 4000`,
 								MetadataPolicy:     "None",
 								Property:           "USER",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 						{
@@ -364,7 +364,7 @@ port = 4000`,
 								MetadataPolicy:     "None",
 								Property:           "MYSQL_PASSWD",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 					},
@@ -450,7 +450,7 @@ port = 4000`,
 								MetadataPolicy:     "None",
 								Property:           "USER_ACCESS_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 						{
@@ -460,7 +460,7 @@ port = 4000`,
 								MetadataPolicy:     "None",
 								Property:           "USER_SECRET_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 					},
@@ -682,7 +682,7 @@ port = 4000`,
 								MetadataPolicy:     "None",
 								Property:           "USER_ACCESS_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 					},
@@ -800,7 +800,7 @@ config:
 								MetadataPolicy:     "None",
 								Property:           "S3_ACCESS_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 						{
@@ -810,7 +810,7 @@ config:
 								MetadataPolicy:     "None",
 								Property:           "S3_SECRET_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 					},
@@ -846,7 +846,7 @@ config:
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, true)
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -956,7 +956,208 @@ func TestGenerateCreatePolicy(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOwner)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOwner, true)
+			if err != nil {
+				if tt.err.Error() != err.Error() {
+					t.Errorf("Err Mismatch (+goot: %s)\n", err)
+					t.Errorf("Err Mismatch (+want: %s)\n", tt.err)
+				}
+			} else {
+				diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(
+					func(a, b esv1beta1.ExternalSecretData) bool {
+						return a.SecretKey > b.SecretKey
+					}))
+				if diff != "" {
+					t.Errorf("%s case Mismatch (-want +got):\n%s", tt.name, diff)
+				}
+			}
+		})
+	}
+}
+
+func TestSkipResolveValue(t *testing.T) {
+	tests := []struct {
+		name                 string
+		inputSecret          internalSecret
+		expectExternalSecret esv1beta1.ExternalSecret
+		store                esv1beta1.SecretStoreRef
+		envs                 map[string]string // for render <% ENV %>
+		err                  error
+	}{
+		{
+			name: "simple case for skip resolve value",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "simple_example",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/<% ENV %>-test",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Data: map[string]string{
+					"dist": "<dist-name-of-linux>",
+					"env1": "<% ENV1 %>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "simple_example",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "simple_example",
+						CreationPolicy: esv1beta1.CreatePolicyOwner,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"dist": `"{{ .dist-name-of-linux }}"`,
+								"env1": "<% ENV1 %>",
+							},
+						},
+					},
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "test",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "dist-name-of-linux",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "<% ENV %>-test",
+								MetadataPolicy:     "None",
+								Property:           "dist-name-of-linux",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "Auto",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "mix the vault of <% ENV %>",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "simple_example",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/<% ENV %>-test",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"dist": "<dist-name-of-linux>",
+					"env1": "<% ENV1 %>",
+					"env2": "<% ENV1 %>-<dist-name-of-linux>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "simple_example",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "simple_example",
+						CreationPolicy: esv1beta1.CreatePolicyOwner,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"dist": `"{{ .dist-name-of-linux }}"`,
+								"env1": "<% ENV1 %>",
+								"env2": `"<% ENV1 %>-{{ .dist-name-of-linux }}"`,
+							},
+						},
+					},
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "test",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "dist-name-of-linux",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "<% ENV %>-test",
+								MetadataPolicy:     "None",
+								Property:           "dist-name-of-linux",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "Auto",
+							},
+						},
+						{
+							SecretKey: "<% ENV1 %>",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "<% ENV %>-test",
+								MetadataPolicy:     "None",
+								Property:           "<% ENV1 %>",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "Auto",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for k, v := range tt.envs {
+				_ = os.Setenv(k, v)
+			}
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOwner, false)
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)

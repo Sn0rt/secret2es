@@ -132,7 +132,7 @@ stringData:
 				t.Errorf("parseUnstructuredSecret() returned an unexpected error: got: %v", err)
 			}
 			for _, v := range out {
-				externalSecret, err := convertSecret2ExtSecret(v, ClusterSecretStoreType, "test", esv1beta1.CreatePolicyOrphan)
+				externalSecret, err := convertSecret2ExtSecret(v, ClusterSecretStoreType, "test", esv1beta1.CreatePolicyOrphan, true)
 				if err != nil {
 					t.Errorf("convertSecret2ExtSecret() returned an unexpected error: got: %v", err)
 				}

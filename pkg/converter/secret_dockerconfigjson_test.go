@@ -112,7 +112,7 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan)
+			out, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, true)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {
