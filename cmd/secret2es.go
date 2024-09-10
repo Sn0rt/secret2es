@@ -61,8 +61,12 @@ func extSecretGenCmd() *cobra.Command {
 			if creationPolicy == "" {
 				return fmt.Errorf("creation policy is required")
 			}
+			resolve, err := cmd.Flags().GetBool("resolve")
+			if err != nil {
+				return err
+			}
 
-			err = converter.ConvertSecret(inputPath, storeType, storeName, esv1beta1.ExternalSecretCreationPolicy(creationPolicy))
+			err = converter.ConvertSecret(inputPath, storeType, storeName, esv1beta1.ExternalSecretCreationPolicy(creationPolicy), resolve)
 			if err != nil {
 				return err
 			}
@@ -74,6 +78,7 @@ func extSecretGenCmd() *cobra.Command {
 	cmd.Flags().StringP("storetype", "s", "SecretStore", "Store type (optional)")
 	cmd.Flags().StringP("storename", "n", "", "Store name (required)")
 	cmd.Flags().StringP("creation-policy", "c", "Orphan", "Create policy (default: Orphan), only Owner, Orphan")
+	cmd.Flags().BoolP("resolve", "r", false, "Resolve the <% ENV %> from env")
 
 	err := cmd.MarkFlagRequired("input")
 	if err != nil {

@@ -113,7 +113,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 								MetadataPolicy:     "None",
 								Property:           "USER_ACCESS_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 						{
@@ -123,7 +123,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 								MetadataPolicy:     "None",
 								Property:           "USER_SECRET_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
+								DecodingStrategy:   "Auto",
 							},
 						},
 					},
@@ -144,7 +144,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, true)
 			if err != nil {
 				if tt.err == nil {
 					t.Errorf("unexpected error: %v", err)

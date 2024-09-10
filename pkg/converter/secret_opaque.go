@@ -19,7 +19,8 @@ const (
 	opaqueStringDataType
 )
 
-func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy) (*esv1beta1.ExternalSecret, error) {
+func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName string,
+	creationPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) (*esv1beta1.ExternalSecret, error) {
 	var currentSecretOpaqueSubType int
 	if len(inputSecret.Data) != 0 {
 		currentSecretOpaqueSubType = opaqueDataType
@@ -28,7 +29,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 	}
 
 	// get the vault secret key
-	var vaultSecretKey, err = getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
+	vaultSecretKey, err := getVaultSecretKey(inputSecret.Annotations["avp.kubernetes.io/path"])
 	if err != nil {
 		return nil, fmt.Errorf(illegalVaultPath, resolvedValueFromEnv)
 	}
@@ -43,7 +44,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		// dynamic value add to externalSecretData
 		for key, value := range inputSecret.Data {
 			if resolvedValueFromEnv.MatchString(value) {
-				resolvedValue, err := resolved(value)
+				resolvedValue, err := resolved(value, resolve)
 				if err != nil {
 					return nil, err
 				}
@@ -79,7 +80,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 	case opaqueStringDataType:
 		for fileName, fileContent := range inputSecret.StringData {
 			// should resolve <% %> in static value
-			resolvedFileContent, err := resolved(fileContent)
+			resolvedFileContent, err := resolved(fileContent, resolve)
 			if err != nil {
 				return nil, err
 			}
@@ -91,13 +92,16 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			} else {
 				for _, s := range propertyFromSecretData {
 					output := strings.TrimSpace(string(s[1]))
+					if strings.HasPrefix(output, "%") && strings.HasSuffix(output, "%") {
+						output = fmt.Sprintf(`<%s>`, output)
+					}
 					// if secret key not found in externalSecretData then append to slice
 					if !contains(externalSecretData, output) {
 						externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
 							SecretKey: output,
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
-								DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
+								DecodingStrategy:   esv1beta1.ExternalSecretDecodeAuto,
 								MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
 								Key:                vaultSecretKey,
 								Property:           output,

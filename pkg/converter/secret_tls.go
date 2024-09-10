@@ -6,13 +6,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func generateEsByTLS(inputSecret *internalSecret, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy) (*esv1beta1.ExternalSecret, error) {
+func generateEsByTLS(inputSecret *internalSecret, storeType, storeName string,
+	creationPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) (*esv1beta1.ExternalSecret, error) {
 	if len(inputSecret.StringData) != 0 {
 		return nil, fmt.Errorf(ErrTLSNotAllowDataField, inputSecret.Name)
 	}
 
 	// prepare the ref of sensitive data
-	output, err := generateEsByOpaqueSecret(inputSecret, storeType, storeName, creationPolicy)
+	output, err := generateEsByOpaqueSecret(inputSecret, storeType, storeName, creationPolicy, resolve)
 	if err != nil {
 		return nil, err
 	}

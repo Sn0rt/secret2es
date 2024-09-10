@@ -73,7 +73,7 @@ func TestResolved(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			out, err := resolved(tt.originalString)
+			out, err := resolved(tt.originalString, true)
 			if err != nil {
 				if err.Error() != tt.err.Error() {
 					t.Errorf("resolved() returned an unexpected error: got: %v, want: %v", err, tt.err)
@@ -236,6 +236,41 @@ config:
   access_key: {{ .S3_ACCESS_KEY }}
   secret_key: {{ .S3_SECRET_KEY }}`,
 		},
+		{
+			name:           "include <% ENV %>",
+			originalString: "password = <% MYSQL_PASSWD %>",
+			expectString:   "password = <% MYSQL_PASSWD %>",
+		},
+		{
+			name: "yaml_file with env and tab",
+			originalString: `type: S3
+prefix: "test/ubuntu"
+config:
+	endpoint: "https://s3.amazonaws.com"
+	access_key: <% S3_ACCESS_KEY %>
+	secret_key: <S3_SECRET_KEY>`,
+			expectString: `type: S3
+prefix: "test/ubuntu"
+config:
+	endpoint: "https://s3.amazonaws.com"
+	access_key: <% S3_ACCESS_KEY %>
+	secret_key: {{ .S3_SECRET_KEY }}`,
+		},
+		{
+			name: "yaml_file with env and space",
+			originalString: `type: S3
+prefix: "test/ubuntu"
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: <% S3_ACCESS_KEY %>
+  secret_key: <S3_SECRET_KEY>`,
+			expectString: `type: S3
+prefix: "test/ubuntu"
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: <% S3_ACCESS_KEY %>
+  secret_key: {{ .S3_SECRET_KEY }}`,
+		},
 	}
 
 	for _, tt := range tests {
@@ -250,6 +285,7 @@ config:
 			} else {
 				if out != tt.expectString {
 					t.Errorf("resolveAngleBrackets() returned an unexpected string: got: %v, want: %s", out, tt.expectString)
+					fmt.Printf("Got length: %d, Want length: %d\n", len(out), len(tt.expectString))
 				}
 			}
 		})
@@ -267,8 +303,16 @@ func TestAddQuotesForCurlyBraces(t *testing.T) {
 			expectString:   "test-ubuntu-20.04-linux",
 		},
 		{
+			originalString: "<% linux-test %>",
+			expectString:   `<% linux-test %>`,
+		},
+		{
 			originalString: "{{ .A }}-linux",
 			expectString:   `"{{ .A }}-linux"`,
+		},
+		{
+			originalString: "{{ .A }}-linux-<% ENV %>",
+			expectString:   `"{{ .A }}-linux-<% ENV %>"`,
 		},
 		{
 			originalString: `sn0rt-{{ .A }}-linux`,
@@ -328,6 +372,18 @@ config:
 config:
   endpoint: "https://s3.amazonaws.com"
   access_key: "{{ .S3_ACCESS_KEY }}"
+  secret_key: "{{ .S3_SECRET_KEY }}"`,
+		},
+		{
+			originalString: `type: S3
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: {{ .S3_ACCESS_KEY }}-<% ENV %>
+  secret_key: {{ .S3_SECRET_KEY }}`,
+			expectString: `type: S3
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: "{{ .S3_ACCESS_KEY }}-<% ENV %>"
   secret_key: "{{ .S3_SECRET_KEY }}"`,
 		},
 	}

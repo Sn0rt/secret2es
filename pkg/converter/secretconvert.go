@@ -10,7 +10,7 @@ import (
 )
 
 // ConvertSecret converts a Kubernetes Secret to an ExternalSecret
-func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy) error {
+func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) error {
 	bytes, err := os.ReadFile(inputFile)
 	if err != nil {
 		return fmt.Errorf("error reading inputSecret file: %w", err)
@@ -22,7 +22,7 @@ func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1be
 	}
 
 	for _, inputSecret := range inputSecretList {
-		externalSecret, err := convertSecret2ExtSecret(inputSecret, storeType, storeName, creationPolicy)
+		externalSecret, err := convertSecret2ExtSecret(inputSecret, storeType, storeName, creationPolicy, resolve)
 		// handle error
 		if err != nil {
 			switch err.Error() {
@@ -98,7 +98,8 @@ func postProcessOutputES(yamlData []byte) string {
 	return string(newYamlData)
 }
 
-func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName string, createPolicy esv1beta1.ExternalSecretCreationPolicy) (*esv1beta1.ExternalSecret, error) {
+func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName string,
+	createPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) (*esv1beta1.ExternalSecret, error) {
 	if err := secretCommonVerify(inputSecret); err != nil {
 		return nil, err
 	}
@@ -115,21 +116,23 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 	}
 
 	// get the secret of vault path
-	var resolvedSecretPath, err = resolved(inputSecret.Annotations["avp.kubernetes.io/path"])
-	if err != nil {
-		return nil, err
+	if resolve {
+		var resolvedSecretPath, err = resolved(inputSecret.Annotations["avp.kubernetes.io/path"], resolve)
+		if err != nil {
+			return nil, err
+		}
+		inputSecret.Annotations["avp.kubernetes.io/path"] = resolvedSecretPath
 	}
-	inputSecret.Annotations["avp.kubernetes.io/path"] = resolvedSecretPath
 
 	switch inputSecret.Type {
 	case corev1.SecretTypeOpaque:
-		return generateEsByOpaqueSecret(&inputSecret, storeType, storeName, createPolicy)
+		return generateEsByOpaqueSecret(&inputSecret, storeType, storeName, createPolicy, resolve)
 	case corev1.SecretTypeBasicAuth:
-		return generateEsByBasicAuthSecret(&inputSecret, storeType, storeName, createPolicy)
+		return generateEsByBasicAuthSecret(&inputSecret, storeType, storeName, createPolicy, resolve)
 	case corev1.SecretTypeDockerConfigJson:
-		return generateEsByDockerConfigJSON(&inputSecret, storeType, storeName, createPolicy)
+		return generateEsByDockerConfigJSON(&inputSecret, storeType, storeName, createPolicy, resolve)
 	case corev1.SecretTypeTLS:
-		return generateEsByTLS(&inputSecret, storeType, storeName, createPolicy)
+		return generateEsByTLS(&inputSecret, storeType, storeName, createPolicy, resolve)
 	}
 
 	return nil, fmt.Errorf(NotImplSecretType, inputSecret.Type, inputSecret.Name)
