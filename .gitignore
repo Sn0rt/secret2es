@@ -26,3 +26,5 @@ go.work
 *.swo
 *~
 secret2es
+/vendor
+
