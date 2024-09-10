@@ -5,53 +5,51 @@ This tool allows administrators to migrate secrets originally managed by [argocd
 ## Usage
 
 ```shell
-secret2es es-gen \
-  -i, --input <corev1-secret-file> \
-  -n --storename <store-name> \
+./secret2es --help
+A tool to convert AVP secrets to ExternalSecrets
+
+Usage:
+  secret2es [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  es-gen      Generate external secrets from corev1 secrets
+  help        Help about any command
+  version     Print the version number of secret2es
+
+Flags:
+  -h, --help   help for secret2es
+
+Use "secret2es [command] --help" for more information about a command.
+```
+
+```shell
+/secret2es es-gen --help
+Generate external secrets from corev1 secrets
+
+Usage:
+  secret2es es-gen [flags]
+
+Flags:
+  -c, --creation-policy string   Create policy (default: Orphan), only Owner, Orphan (default "Orphan")
+  -h, --help                     help for es-gen
+  -i, --input string             Input path of corev1 secret file (required)
+  -r, --resolve                  Resolve the <% ENV %> from env
+  -n, --storename string         Store name (required)
+  -s, --storetype string         Store type (optional) (default "SecretStore")
 ```
 
 example 
 
 ```shell
-➜  secret2es git:(main) ✗ ./secret2es es-gen -i test/opaque-secret.yaml -n test
+./secret2es es-gen -i e2e/templated.yaml -s ClusterSecretStore -n tenant-b -r true
 ---
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
 metadata:
-  annotations:
-    avp.kubernetes.io/path: secret/data/foo
-  creationTimestamp: null
-  name: simple
-spec:
-  data:
-  - remoteRef:
-      key: foo
-      property: dist-name-of-linux
-    secretKey: dist
-  secretStoreRef:
-    kind: ClusterSecretStore
-    name: test
-  target:
-    creationPolicy: Merge
-    deletionPolicy: Retain
-    name: simple
-status:
-  binding: {}
-  refreshTime: null
----
+  name: input1
 ...
 ```
-
-### `es-gen` subCommand Options
-
-- `-i, --input <corev1-secret-file>`: Required. Path to the input core v1 Secret file. Must include special `argocd-vault-plugin` annotations.
-- `-s, --storetype <store-type>`: Optional. Type of secret store. Default is "ClusterSecretStore".
-- `-n, --storename <store-name>`: Required. Name of the secret store.
-
-### Additional Commands
-
-- `secret2es help`: Display help information about the tool.
-- `secret2es version`: Show the current version of the tool.
 
 ## Building
 

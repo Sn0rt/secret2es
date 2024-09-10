@@ -25,7 +25,7 @@ func main() {
 func setupAndExecute() error {
 	rootCmd := &cobra.Command{
 		Use:   "secret2es",
-		Short: "A tool to convert Kubernetes secrets to External Secrets",
+		Short: "A tool to convert AVP secrets to ExternalSecrets",
 	}
 
 	rootCmd.AddCommand(extSecretGenCmd())
