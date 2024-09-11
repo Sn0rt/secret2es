@@ -18,6 +18,9 @@ func generateEsByTLS(inputSecret *internalSecret, storeType, storeName string,
 		return nil, err
 	}
 	output.Spec.Target.Template.Type = corev1.SecretTypeTLS
+	for i, _ := range output.Spec.Data {
+		output.Spec.Data[i].RemoteRef.DecodingStrategy = esv1beta1.ExternalSecretDecodeAuto
+	}
 
 	return output, nil
 }

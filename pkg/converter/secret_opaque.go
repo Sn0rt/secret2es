@@ -20,7 +20,7 @@ const (
 )
 
 func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName string,
-	creationPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) (*esv1beta1.ExternalSecret, error) {
+	creationPolicy esv1beta1.ExternalSecretCreationPolicy, isResolve bool) (*esv1beta1.ExternalSecret, error) {
 	var currentSecretOpaqueSubType int
 	if len(inputSecret.Data) != 0 {
 		currentSecretOpaqueSubType = opaqueDataType
@@ -43,46 +43,59 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		// static value add to template directly
 		// dynamic value add to externalSecretData
 		for key, value := range inputSecret.Data {
-			if resolvedValueFromEnv.MatchString(value) {
-				resolvedValue, err := resolved(value, resolve)
-				if err != nil {
-					return nil, err
+			propertyFromSecretData := captureFromFile.FindAllStringSubmatch(value, -1)
+			if len(propertyFromSecretData) == 0 {
+				if IsBase64(value) {
+					templateData[key] = fmt.Sprintf(`{{ "%s" | b64dec }}`, value)
+				} else {
+					templateData[key] = value
 				}
-				templateData[key] = resolvedValue
-			} else {
-				propertyFromSecretData := captureFromFile.FindStringSubmatch(value)
-				if len(propertyFromSecretData) == 0 {
-					if IsBase64(value) {
-						templateData[key] = fmt.Sprintf(`{{ "%s" | b64dec }}`, value)
-					} else {
-						templateData[key] = value
-					}
-					continue
-				}
-				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
-					SecretKey: propertyFromSecretData[1],
-					RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-						ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
-						DecodingStrategy:   esv1beta1.ExternalSecretDecodeAuto,
-						MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
-						Key:                vaultSecretKey,
-						Property:           propertyFromSecretData[1],
-					},
-				})
-				newFileContentWithoutQuote, err := resolveAngleBrackets(value)
-				if err != nil {
-					return nil, err
-				}
-				var newFileContent = addQuotesCurlyBraces(newFileContentWithoutQuote)
-				templateData[key] = newFileContent
+				continue
 			}
+
+			if len(propertyFromSecretData) != 1 {
+				return nil, fmt.Errorf(ErrCommonNotSupportMultipleValue, inputSecret.Name)
+			}
+			if strings.HasPrefix(propertyFromSecretData[0][0], "<%") &&
+				strings.HasSuffix(propertyFromSecretData[0][0], "%>") {
+				if isResolve {
+					resolvedValue, err := resolved(propertyFromSecretData[0][0])
+					if err != nil {
+						return nil, err
+					}
+					templateData[key] = resolvedValue
+				} else {
+					templateData[key] = propertyFromSecretData[0][0]
+				}
+				continue
+			}
+
+			externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
+				SecretKey: propertyFromSecretData[0][1],
+				RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+					ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
+					DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
+					MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
+					Key:                vaultSecretKey,
+					Property:           propertyFromSecretData[0][1],
+				},
+			})
+			newFileContentWithoutQuote, err := resolveAngleBrackets(value)
+			if err != nil {
+				return nil, err
+			}
+			var newFileContent = addQuotesCurlyBraces(newFileContentWithoutQuote)
+			templateData[key] = newFileContent
 		}
 	case opaqueStringDataType:
 		for fileName, fileContent := range inputSecret.StringData {
-			// should resolve <% %> in static value
-			resolvedFileContent, err := resolved(fileContent, resolve)
-			if err != nil {
-				return nil, err
+			// should isResolve <% %> in static value
+			resolvedFileContent := fileContent
+			if isResolve {
+				resolvedFileContent, err = resolved(fileContent)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			// map <>
@@ -101,7 +114,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 							SecretKey: output,
 							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
 								ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
-								DecodingStrategy:   esv1beta1.ExternalSecretDecodeAuto,
+								DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
 								MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
 								Key:                vaultSecretKey,
 								Property:           output,

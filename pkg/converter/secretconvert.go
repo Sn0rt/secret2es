@@ -68,7 +68,6 @@ func postProcessOutputES(yamlData []byte) string {
 		}
 	}
 
-	// 处理 target.template.data 中的值
 	var needReplace = false
 	if spec, ok := externalSecret["spec"].(map[string]interface{}); ok {
 		if target, ok := spec["target"].(map[string]interface{}); ok {
@@ -78,6 +77,16 @@ func postProcessOutputES(yamlData []byte) string {
 						if valString, ok := value.(string); ok {
 							// if start with "{{ and end with }}" set a needReplace value
 							if strings.HasPrefix(valString, `"{{`) && strings.HasSuffix(valString, `}}"`) {
+								needReplace = true
+							}
+
+							// "<% ENV %>-{{ .TEST_DIST_LINUX }}"
+							if strings.HasPrefix(valString, `"<`) && strings.HasSuffix(valString, `}}"`) {
+								needReplace = true
+							}
+
+							// "{{ .TEST_DIST_LINUX }}-<% ENV %>"
+							if strings.HasPrefix(valString, `"{{`) && strings.HasSuffix(valString, `>"`) {
 								needReplace = true
 							}
 						}
@@ -92,8 +101,8 @@ func postProcessOutputES(yamlData []byte) string {
 		panic(err.Error())
 	}
 	if needReplace {
-		removedLeft := strings.Replace(string(newYamlData), `'"{{`, `"{{`, -1)
-		return strings.Replace(removedLeft, `}}"'`, `}}"`, -1)
+		removedLeft := strings.Replace(string(newYamlData), `'"`, `"`, -1)
+		return strings.Replace(removedLeft, `"'`, `"`, -1)
 	}
 	return string(newYamlData)
 }
@@ -117,7 +126,7 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 
 	// get the secret of vault path
 	if resolve {
-		var resolvedSecretPath, err = resolved(inputSecret.Annotations["avp.kubernetes.io/path"], resolve)
+		var resolvedSecretPath, err = resolved(inputSecret.Annotations["avp.kubernetes.io/path"])
 		if err != nil {
 			return nil, err
 		}

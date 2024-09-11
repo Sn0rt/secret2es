@@ -73,7 +73,7 @@ func TestResolved(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			out, err := resolved(tt.originalString, true)
+			out, err := resolved(tt.originalString)
 			if err != nil {
 				if err.Error() != tt.err.Error() {
 					t.Errorf("resolved() returned an unexpected error: got: %v, want: %v", err, tt.err)
