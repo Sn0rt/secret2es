@@ -113,7 +113,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 								MetadataPolicy:     "None",
 								Property:           "USER_ACCESS_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "Auto",
+								DecodingStrategy:   "None",
 							},
 						},
 						{
@@ -123,7 +123,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 								MetadataPolicy:     "None",
 								Property:           "USER_SECRET_KEY",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "Auto",
+								DecodingStrategy:   "None",
 							},
 						},
 					},
