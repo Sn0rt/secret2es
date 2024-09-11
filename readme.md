@@ -63,6 +63,10 @@ make build
 
 1. the `label` and `annotation` of the secret has not been created if it has been set with `ExternalSecret` CRD.
 
+## highlights
+
+1. this tools an offline tools. pls check the generated secret by yourself again.
+
 ## License
 
 BSD-3
