@@ -839,6 +839,33 @@ config:
 				},
 			},
 		},
+		{
+			name: "not support <VAULT>_<VAULT1> with data field",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mix_example1",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo-test",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Data: map[string]string{
+					"key1": "<admin>-<dist-name-of-linux>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			err: fmt.Errorf(ErrCommonNotSupportMultipleValue, "mix_example1"),
+		},
 	}
 
 	for _, tt := range tests {
@@ -1070,7 +1097,7 @@ func TestSkipResolveValue(t *testing.T) {
 				},
 				Type: corev1.SecretTypeOpaque,
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "simple_example",
+					Name: "mix_example1",
 					Annotations: map[string]string{
 						"avp.kubernetes.io/path": "secret/data/<% ENV %>-test",
 					},
@@ -1094,7 +1121,7 @@ func TestSkipResolveValue(t *testing.T) {
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "simple_example",
+					Name:      "mix_example1",
 					Namespace: "",
 					Labels: map[string]string{
 						"app": "test",
@@ -1103,7 +1130,7 @@ func TestSkipResolveValue(t *testing.T) {
 				Spec: esv1beta1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
 					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "simple_example",
+						Name:           "mix_example1",
 						CreationPolicy: esv1beta1.CreatePolicyOwner,
 						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
 						Template: &esv1beta1.ExternalSecretTemplate{
@@ -1149,6 +1176,33 @@ func TestSkipResolveValue(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "mix the env value and vault value",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mix_example2",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo-test",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Data: map[string]string{
+					"key": "<% ENV1 %>-<dist-name-of-linux>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			err: fmt.Errorf(ErrCommonNotSupportMultipleValue, "mix_example2"),
 		},
 	}
 

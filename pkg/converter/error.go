@@ -9,6 +9,7 @@ const (
 	ErrCommonNotIncludeAngleBrackets           = "not include any angle brackets of secret: %s"
 	ErrCommonNotNeedRefData                    = "not need ref data of secret: %s"
 	ErrCommonNotSetEnv                         = "not set ENV: %s"
+	ErrCommonNotSupportMultipleValue           = "not support set multiple <> with Data Fields: %s"
 	NotImplSecretType                          = "not impl %s secret type of secret: %s"
 	illegalStoreType                           = "illegal store type: %s"
 	illegalVaultPath                           = "illegal vault path: %s"

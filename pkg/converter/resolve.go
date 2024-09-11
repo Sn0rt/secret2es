@@ -14,10 +14,7 @@ var (
 	resolvedValueFromEnv  = regexp.MustCompile(patternResolveFromEnv)
 )
 
-func resolved(originalString string, enable bool) (string, error) {
-	if !enable {
-		return originalString, nil
-	}
+func resolved(originalString string) (string, error) {
 	needResolvedStrings := resolvedValueFromEnv.FindAllStringSubmatch(originalString, -1)
 	for _, match := range needResolvedStrings {
 		if len(match) > 1 {

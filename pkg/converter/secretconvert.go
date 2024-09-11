@@ -68,7 +68,6 @@ func postProcessOutputES(yamlData []byte) string {
 		}
 	}
 
-	// 处理 target.template.data 中的值
 	var needReplace = false
 	if spec, ok := externalSecret["spec"].(map[string]interface{}); ok {
 		if target, ok := spec["target"].(map[string]interface{}); ok {
@@ -127,7 +126,7 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 
 	// get the secret of vault path
 	if resolve {
-		var resolvedSecretPath, err = resolved(inputSecret.Annotations["avp.kubernetes.io/path"], resolve)
+		var resolvedSecretPath, err = resolved(inputSecret.Annotations["avp.kubernetes.io/path"])
 		if err != nil {
 			return nil, err
 		}
