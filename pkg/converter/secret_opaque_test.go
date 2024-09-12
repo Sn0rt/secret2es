@@ -19,6 +19,7 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 		store                esv1beta1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
 		err                  error
+		enableResolve        bool
 	}{
 		{
 			name: "test single value is <% ENV %>",
@@ -174,6 +175,418 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:          "opaque type secret with path <% ENV %> and stringData",
+			enableResolve: true,
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "string_data_example",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"mylogin.conf": `[client]
+host = example.com
+user = < USER >
+password = <MYSQL_PASSWD>
+port = 4000`,
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-a",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "string_data_example",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "tenant-a",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "USER",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "ubuntu-22.04-foo",
+								MetadataPolicy:     "None",
+								Property:           "USER",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+						{
+							SecretKey: "MYSQL_PASSWD",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "ubuntu-22.04-foo",
+								MetadataPolicy:     "None",
+								Property:           "MYSQL_PASSWD",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+					},
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "string_data_example",
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"mylogin.conf": `[client]
+host = example.com
+user = "{{ .USER }}"
+password = "{{ .MYSQL_PASSWD }}"
+port = 4000`,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:          "opaque type secret with path <% ENV %> and multiple stringData",
+			enableResolve: true,
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "string_data_multiple_example",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"sn0rt.github.io.default.access_key": "< USER_ACCESS_KEY >",
+					"sn0rt.github.io.default.secret_key": "<USER_SECRET_KEY>",
+					"sn0rt.github.io.default.cmt":        "sn0rt-<USER_SECRET_KEY>",
+					"sn0rt.github.io.default.key":        "key",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-b",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "string_data_multiple_example",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "tenant-b",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "USER_ACCESS_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "ubuntu-22.04-foo",
+								MetadataPolicy:     "None",
+								Property:           "USER_ACCESS_KEY",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+						{
+							SecretKey: "USER_SECRET_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "ubuntu-22.04-foo",
+								MetadataPolicy:     "None",
+								Property:           "USER_SECRET_KEY",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+					},
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "string_data_multiple_example",
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
+								"sn0rt.github.io.default.secret_key": `"{{ .USER_SECRET_KEY }}"`,
+								"sn0rt.github.io.default.cmt":        `"sn0rt-{{ .USER_SECRET_KEY }}"`,
+								"sn0rt.github.io.default.key":        "key",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:          "stringData type secret with <% ENV %> and stringData and multiple",
+			enableResolve: true,
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "multiple_example_env_with_stringData",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"sn0rt.github.io.default.access_key": "<USER_ACCESS_KEY>",
+					"sn0rt.github.io.default.secret_key": "<% USER_SECRET_KEY %>",
+					"sn0rt.github.io.default.key":        "key",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-b",
+			},
+			envs: map[string]string{
+				"DIST":            "ubuntu",
+				"VER":             "22.04",
+				"USER_SECRET_KEY": "secret_key",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "multiple_example_env_with_stringData",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "tenant-b",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "USER_ACCESS_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "USER_ACCESS_KEY",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+					},
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "multiple_example_env_with_stringData",
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
+								"sn0rt.github.io.default.key":        "key",
+								"sn0rt.github.io.default.secret_key": "secret_key",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:          "resolve <% ENV %> with stringData and multiple stringData empty ref",
+			enableResolve: true,
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "multiple_stringData_should_empty_ref",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"sn0rt.github.io.default.secret_key": "<% USER_SECRET_KEY %>",
+					"sn0rt.github.io.default.key":        "key", // merge policy should ignore this
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-b",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			err: fmt.Errorf(ErrCommonNotNeedRefData, "multiple_stringData_should_empty_ref"),
+		},
+		{
+			name:          "both <% ENV %> and < KEY > from stringData",
+			enableResolve: true,
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "both_env_and_key_stringData",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"config.yaml": `type: S3
+prefix: "test/<% DIST %>"
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: <S3_ACCESS_KEY>
+  secret_key: <S3_SECRET_KEY>`,
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Kind: "ClusterSecretStore",
+				Name: "tenant-b",
+			},
+			envs: map[string]string{
+				"DIST": "ubuntu",
+				"VER":  "22.04",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "both_env_and_key_stringData",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "tenant-b",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "S3_ACCESS_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "S3_ACCESS_KEY",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+						{
+							SecretKey: "S3_SECRET_KEY",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "S3_SECRET_KEY",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+					},
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "both_env_and_key_stringData",
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"config.yaml": `type: S3
+prefix: "test/ubuntu"
+config:
+  endpoint: "https://s3.amazonaws.com"
+  access_key: "{{ .S3_ACCESS_KEY }}"
+  secret_key: "{{ .S3_SECRET_KEY }}"`,
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -181,7 +594,7 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, false)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, tt.enableResolve)
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -200,7 +613,7 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 	}
 }
 
-func TestGenerateOpaqueSecret(t *testing.T) {
+func TestGenerateDataOpaqueSecret(t *testing.T) {
 	tests := []struct {
 		name                 string
 		inputSecret          internalSecret
@@ -485,198 +898,6 @@ func TestGenerateOpaqueSecret(t *testing.T) {
 			},
 		},
 		{
-			name: "opaque type secret with path <% ENV %> and stringData",
-			inputSecret: internalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				Type: corev1.SecretTypeOpaque,
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "string_data_example",
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
-					},
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				StringData: map[string]string{
-					"mylogin.conf": `[client]
-host = example.com
-user = < USER >
-password = <MYSQL_PASSWD>
-port = 4000`,
-				},
-			},
-			store: esv1beta1.SecretStoreRef{
-				Kind: "ClusterSecretStore",
-				Name: "tenant-a",
-			},
-			envs: map[string]string{
-				"DIST": "ubuntu",
-				"VER":  "22.04",
-			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
-					Kind:       "ExternalSecret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "string_data_example",
-					Namespace: "",
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				Spec: esv1beta1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
-					SecretStoreRef: esv1beta1.SecretStoreRef{
-						Name: "tenant-a",
-						Kind: "ClusterSecretStore",
-					},
-					Data: []esv1beta1.ExternalSecretData{
-						{
-							SecretKey: "USER",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:                "ubuntu-22.04-foo",
-								MetadataPolicy:     "None",
-								Property:           "USER",
-								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
-							},
-						},
-						{
-							SecretKey: "MYSQL_PASSWD",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:                "ubuntu-22.04-foo",
-								MetadataPolicy:     "None",
-								Property:           "MYSQL_PASSWD",
-								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
-							},
-						},
-					},
-					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "string_data_example",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
-							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Labels: map[string]string{
-									"app": "test",
-								},
-							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
-							Data: map[string]string{
-								"mylogin.conf": `[client]
-host = example.com
-user = "{{ .USER }}"
-password = "{{ .MYSQL_PASSWD }}"
-port = 4000`,
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "opaque type secret with path <% ENV %> and multiple stringData",
-			inputSecret: internalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				Type: corev1.SecretTypeOpaque,
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "string_data_multiple_example",
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/<% DIST %>-<% VER %>-foo",
-					},
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				StringData: map[string]string{
-					"sn0rt.github.io.default.access_key": "< USER_ACCESS_KEY >",
-					"sn0rt.github.io.default.secret_key": "<USER_SECRET_KEY>",
-					"sn0rt.github.io.default.cmt":        "sn0rt-<USER_SECRET_KEY>",
-					"sn0rt.github.io.default.key":        "key",
-				},
-			},
-			store: esv1beta1.SecretStoreRef{
-				Kind: "ClusterSecretStore",
-				Name: "tenant-b",
-			},
-			envs: map[string]string{
-				"DIST": "ubuntu",
-				"VER":  "22.04",
-			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
-					Kind:       "ExternalSecret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "string_data_multiple_example",
-					Namespace: "",
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				Spec: esv1beta1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
-					SecretStoreRef: esv1beta1.SecretStoreRef{
-						Name: "tenant-b",
-						Kind: "ClusterSecretStore",
-					},
-					Data: []esv1beta1.ExternalSecretData{
-						{
-							SecretKey: "USER_ACCESS_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:                "ubuntu-22.04-foo",
-								MetadataPolicy:     "None",
-								Property:           "USER_ACCESS_KEY",
-								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
-							},
-						},
-						{
-							SecretKey: "USER_SECRET_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:                "ubuntu-22.04-foo",
-								MetadataPolicy:     "None",
-								Property:           "USER_SECRET_KEY",
-								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
-							},
-						},
-					},
-					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "string_data_multiple_example",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
-							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Labels: map[string]string{
-									"app": "test",
-								},
-							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
-							Data: map[string]string{
-								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
-								"sn0rt.github.io.default.secret_key": `"{{ .USER_SECRET_KEY }}"`,
-								"sn0rt.github.io.default.cmt":        `"sn0rt-{{ .USER_SECRET_KEY }}"`,
-								"sn0rt.github.io.default.key":        "key",
-							},
-						},
-					},
-				},
-			},
-		},
-		{
 			name: "resolve the value from env",
 			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
@@ -807,221 +1028,6 @@ port = 4000`,
 								Property:           "FROM_VAULT_DATA3",
 								ConversionStrategy: "Default",
 								DecodingStrategy:   "None",
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "stringData type secret with <% ENV %> and stringData and multiple",
-			inputSecret: internalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				Type: corev1.SecretTypeOpaque,
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "multiple_example_env_with_stringData",
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/foo",
-					},
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				StringData: map[string]string{
-					"sn0rt.github.io.default.access_key": "<USER_ACCESS_KEY>",
-					"sn0rt.github.io.default.secret_key": "<% USER_SECRET_KEY %>",
-					"sn0rt.github.io.default.key":        "key",
-				},
-			},
-			store: esv1beta1.SecretStoreRef{
-				Kind: "ClusterSecretStore",
-				Name: "tenant-b",
-			},
-			envs: map[string]string{
-				"DIST":            "ubuntu",
-				"VER":             "22.04",
-				"USER_SECRET_KEY": "secret_key",
-			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
-					Kind:       "ExternalSecret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "multiple_example_env_with_stringData",
-					Namespace: "",
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				Spec: esv1beta1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
-					SecretStoreRef: esv1beta1.SecretStoreRef{
-						Name: "tenant-b",
-						Kind: "ClusterSecretStore",
-					},
-					Data: []esv1beta1.ExternalSecretData{
-						{
-							SecretKey: "USER_ACCESS_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:                "foo",
-								MetadataPolicy:     "None",
-								Property:           "USER_ACCESS_KEY",
-								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
-							},
-						},
-					},
-					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "multiple_example_env_with_stringData",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
-							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Labels: map[string]string{
-									"app": "test",
-								},
-							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
-							Data: map[string]string{
-								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
-								"sn0rt.github.io.default.key":        "key",
-								"sn0rt.github.io.default.secret_key": "secret_key",
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "resolve <% ENV %> with stringData and multiple stringData empty ref",
-			inputSecret: internalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				Type: corev1.SecretTypeOpaque,
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "multiple_stringData_should_empty_ref",
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/foo",
-					},
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				StringData: map[string]string{
-					"sn0rt.github.io.default.secret_key": "<% USER_SECRET_KEY %>",
-					"sn0rt.github.io.default.key":        "key", // merge policy should ignore this
-				},
-			},
-			store: esv1beta1.SecretStoreRef{
-				Kind: "ClusterSecretStore",
-				Name: "tenant-b",
-			},
-			envs: map[string]string{
-				"DIST": "ubuntu",
-				"VER":  "22.04",
-			},
-			err: fmt.Errorf(ErrCommonNotNeedRefData, "multiple_stringData_should_empty_ref"),
-		},
-		{
-			name: "both <% ENV %> and < KEY > from stringData",
-			inputSecret: internalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
-				Type: corev1.SecretTypeOpaque,
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "both_env_and_key_stringData",
-					Annotations: map[string]string{
-						"avp.kubernetes.io/path": "secret/data/foo",
-					},
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				StringData: map[string]string{
-					"config.yaml": `type: S3
-prefix: "test/<% DIST %>"
-config:
-  endpoint: "https://s3.amazonaws.com"
-  access_key: <S3_ACCESS_KEY>
-  secret_key: <S3_SECRET_KEY>`,
-				},
-			},
-			store: esv1beta1.SecretStoreRef{
-				Kind: "ClusterSecretStore",
-				Name: "tenant-b",
-			},
-			envs: map[string]string{
-				"DIST": "ubuntu",
-				"VER":  "22.04",
-			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
-					Kind:       "ExternalSecret",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "both_env_and_key_stringData",
-					Namespace: "",
-					Labels: map[string]string{
-						"app": "test",
-					},
-				},
-				Spec: esv1beta1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
-					SecretStoreRef: esv1beta1.SecretStoreRef{
-						Name: "tenant-b",
-						Kind: "ClusterSecretStore",
-					},
-					Data: []esv1beta1.ExternalSecretData{
-						{
-							SecretKey: "S3_ACCESS_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:                "foo",
-								MetadataPolicy:     "None",
-								Property:           "S3_ACCESS_KEY",
-								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
-							},
-						},
-						{
-							SecretKey: "S3_SECRET_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								Key:                "foo",
-								MetadataPolicy:     "None",
-								Property:           "S3_SECRET_KEY",
-								ConversionStrategy: "Default",
-								DecodingStrategy:   "None",
-							},
-						},
-					},
-					Target: esv1beta1.ExternalSecretTarget{
-						Name:           "both_env_and_key_stringData",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
-							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
-								Labels: map[string]string{
-									"app": "test",
-								},
-							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
-							Data: map[string]string{
-								"config.yaml": `type: S3
-prefix: "test/ubuntu"
-config:
-  endpoint: "https://s3.amazonaws.com"
-  access_key: "{{ .S3_ACCESS_KEY }}"
-  secret_key: "{{ .S3_SECRET_KEY }}"`,
 							},
 						},
 					},
