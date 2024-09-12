@@ -89,46 +89,51 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		}
 	case opaqueStringDataType:
 		for fileName, fileContent := range inputSecret.StringData {
-			// should isResolve <% %> in static value
+			propertyFromSecretData := captureFromFile.FindAllStringSubmatch(fileContent, -1)
+			// simple case, no need to resolve
+			if len(propertyFromSecretData) == 0 {
+				templateData[fileName] = fileContent
+				continue
+			}
+
+			// prepare the resolved file content
 			resolvedFileContent := fileContent
-			if isResolve {
-				resolvedFileContent, err = resolved(fileContent)
-				if err != nil {
-					return nil, err
+
+			// resolve the secret key from file content
+			for idx, _ := range propertyFromSecretData {
+				// process if match <% ... %>
+				if strings.HasPrefix(propertyFromSecretData[idx][0], "<%") &&
+					strings.HasSuffix(propertyFromSecretData[idx][0], "%>") {
+					if isResolve {
+						resolvedFileContent, err = resolved(fileContent)
+						if err != nil {
+							return nil, err
+						}
+					}
+					continue
+				}
+
+				// if secret key not found in externalSecretData then append to slice
+				if !contains(externalSecretData, propertyFromSecretData[idx][1]) {
+					externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
+						SecretKey: strings.TrimSpace(propertyFromSecretData[idx][1]),
+						RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
+							DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
+							MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
+							Key:                vaultSecretKey,
+							Property:           strings.TrimSpace(propertyFromSecretData[idx][1]),
+						},
+					})
 				}
 			}
 
-			// map <>
-			propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(resolvedFileContent), -1)
-			if len(propertyFromSecretData) == 0 {
-				templateData[fileName] = resolvedFileContent
-			} else {
-				for _, s := range propertyFromSecretData {
-					output := strings.TrimSpace(string(s[1]))
-					if strings.HasPrefix(output, "%") && strings.HasSuffix(output, "%") {
-						output = fmt.Sprintf(`<%s>`, output)
-					}
-					// if secret key not found in externalSecretData then append to slice
-					if !contains(externalSecretData, output) {
-						externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
-							SecretKey: output,
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-								ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
-								DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
-								MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
-								Key:                vaultSecretKey,
-								Property:           output,
-							},
-						})
-					}
-				}
-				newFileContentWithoutQuote, err := resolveAngleBrackets(resolvedFileContent)
-				if err != nil {
-					return nil, err
-				}
-				var newFileContent = addQuotesCurlyBraces(newFileContentWithoutQuote)
-				templateData[fileName] = newFileContent
+			newFileContentWithoutQuote, err := resolveAngleBrackets(resolvedFileContent)
+			if err != nil {
+				return nil, err
 			}
+			var newFileContent = addQuotesCurlyBraces(newFileContentWithoutQuote)
+			templateData[fileName] = newFileContent
 		}
 	}
 
