@@ -77,7 +77,7 @@ func extSecretGenCmd() *cobra.Command {
 	cmd.Flags().StringP("input", "i", "", "Input path of corev1 secret file (required)")
 	cmd.Flags().StringP("storetype", "s", "SecretStore", "Store type (optional)")
 	cmd.Flags().StringP("storename", "n", "", "Store name (required)")
-	cmd.Flags().StringP("creation-policy", "c", "Orphan", "Create policy (default: Orphan), only Owner, Orphan")
+	cmd.Flags().StringP("creation-policy", "c", "Owner", "Create policy, only Owner, Orphan")
 	cmd.Flags().BoolP("resolve", "r", false, "Resolve the <% ENV %> from env")
 
 	err := cmd.MarkFlagRequired("input")
