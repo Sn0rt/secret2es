@@ -264,8 +264,8 @@ port = 4000`,
 							Data: map[string]string{
 								"mylogin.conf": `[client]
 host = example.com
-user = "{{ .USER }}"
-password = "{{ .MYSQL_PASSWD }}"
+user = {{ .USER }}
+password = {{ .MYSQL_PASSWD }}
 port = 4000`,
 							},
 						},
@@ -579,8 +579,8 @@ config:
 prefix: "test/ubuntu"
 config:
   endpoint: "https://s3.amazonaws.com"
-  access_key: "{{ .S3_ACCESS_KEY }}"
-  secret_key: "{{ .S3_SECRET_KEY }}"`,
+  access_key: {{ .S3_ACCESS_KEY }}
+  secret_key: {{ .S3_SECRET_KEY }}`,
 							},
 						},
 					},

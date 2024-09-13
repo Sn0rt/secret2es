@@ -132,8 +132,12 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			if err != nil {
 				return nil, err
 			}
-			var newFileContent = addQuotesCurlyBraces(newFileContentWithoutQuote)
-			templateData[fileName] = newFileContent
+			if !strings.Contains(newFileContentWithoutQuote, "\n") {
+				var newFileContent = addQuotesCurlyBraces(newFileContentWithoutQuote)
+				templateData[fileName] = newFileContent
+			} else {
+				templateData[fileName] = newFileContentWithoutQuote
+			}
 		}
 	}
 
