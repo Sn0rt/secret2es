@@ -27,6 +27,10 @@ func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1be
 		if err != nil {
 			switch err.Error() {
 			case fmt.Errorf(ErrCommonNotIncludeAngleBrackets, inputSecret.Name).Error():
+				_, _ = fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				continue
+			case fmt.Errorf(ErrCommonEmptyAnnotations, inputSecret.Name).Error():
+				_, _ = fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				continue
 			}
 			return fmt.Errorf("error converting secret to external secret: %s", err.Error())
