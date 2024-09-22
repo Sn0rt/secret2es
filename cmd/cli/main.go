@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Sn0rt/sercert2extsecret/pkg/converter"
+	"github.com/Sn0rt/secret2es/pkg/converter"
 )
 
 var (

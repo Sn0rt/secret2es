@@ -20,7 +20,7 @@ ARG BUILD_TIME
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -v -o secret2es \
     -ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}" \
-    cmd/secret2es.go
+    cmd/cli/main.go
 
 # Final stage
 FROM alpine:3.18

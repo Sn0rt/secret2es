@@ -26,5 +26,7 @@ go.work
 *.swo
 *~
 secret2es
+secret2es-server
 /vendor
 
+.vercel
