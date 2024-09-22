@@ -1,35 +1,36 @@
 BINARY_CLI := secret2es
 BINARY_SERVER := secret2es-server
-GOARCH := amd64
+DOCKER_REPO=wangguohao/secret2es
 
-PLATFORMS := linux darwin windows
-os = $(word 1, $@)
+# Build information
+VERSION=$(shell git describe --tags --always --dirty)
+BUILD_TIME=$(shell date +%FT%T%z)
+LDFLAGS=-ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}"
 
-.PHONY: all build clean test help $(PLATFORMS)
+all: build-cli build-server
 
-all: build
-
-build: build-cli build-server
+build: build-cli
 
 build-cli:
 	@echo "Building CLI tool..."
-	@go build -o bin/$(BINARY_CLI) ./cmd/cli
+	@go build -v -o $(BINARY_CLI) $(LDFLAGS) ./cmd/cli
 
 build-server:
 	@echo "Building HTTP server..."
-	@go build -o bin/$(BINARY_SERVER) ./cmd/server
+	@go build -v -o $(BINARY_SERVER) $(LDFLAGS) ./cmd/server
+
+print-binary-name:
+	@echo $(BINARY_CLI)
+
+test:
+	@go test -v ./...
 
 clean:
 	@echo "Cleaning up..."
 	@rm -rf bin/*
 
-test:
-	@go test -v ./...
-
-$(PLATFORMS):
-	@echo "Building for $(os)..."
-	@GOOS=$(os) GOARCH=$(GOARCH) go build -o bin/$(BINARY_CLI)-$(os)-$(GOARCH) ./cmd/cli
-	@GOOS=$(os) GOARCH=$(GOARCH) go build -o bin/$(BINARY_SERVER)-$(os)-$(GOARCH) ./cmd/server
+docker-build:
+	docker build --build-arg VERSION=$(VERSION) --build-arg BUILD_TIME=$(BUILD_TIME) -t $(DOCKER_REPO):$(VERSION) .
 
 help:
 	@echo "Available commands:"
@@ -37,7 +38,6 @@ help:
 	@echo "  make build-cli   - Build only the CLI binary"
 	@echo "  make build-server- Build only the server binary"
 	@echo "  make clean       - Remove all binaries from the bin directory"
-	@echo "  make test        - Run all tests"
-	@echo "  make linux       - Build binaries for Linux"
-	@echo "  make darwin      - Build binaries for macOS"
-	@echo "  make windows     - Build binaries for Windows"
+	@echo "  make test        - Run tests"
+
+.PHONY: all build build-cli build-server print-binary-name test clean docker-build help

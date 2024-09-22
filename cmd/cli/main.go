@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	"os"
 
 	"github.com/spf13/cobra"
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 
 	"github.com/Sn0rt/secret2es/pkg/converter"
 )

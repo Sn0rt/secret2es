@@ -9,43 +9,66 @@ import (
 	"strings"
 )
 
-// ConvertSecret converts a Kubernetes Secret to an ExternalSecret
+// ConvertSecret converts a AVP Secret to an ExternalSecret for CLI
 func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) error {
 	bytes, err := os.ReadFile(inputFile)
 	if err != nil {
 		return fmt.Errorf("error reading inputSecret file: %w", err)
 	}
 
-	inputSecretList, err := parseUnstructuredSecret(bytes)
+	output, warn, err := ConvertSecretContent(bytes, storeType, storeName, creationPolicy, resolve, nil)
 	if err != nil {
-		return fmt.Errorf("error parsing inputSecret secret: %w", err)
+		return fmt.Errorf("error converting secret: %w", err)
+	}
+	if warn != "" {
+		_, _ = fmt.Fprintf(os.Stderr, "warn: %s", warn)
+	}
+	if output != "" {
+		fmt.Println(output)
+	}
+
+	return nil
+}
+
+func ConvertSecretContent(input []byte, storeType, storeName string,
+	creationPolicy esv1beta1.ExternalSecretCreationPolicy,
+	resolve bool,
+	EnvVars map[string]string) (string, string, error) {
+	output := ""
+	warn := ""
+
+	if resolve && len(EnvVars) > 0 {
+		for key, value := range EnvVars {
+			_ = os.Setenv(key, value)
+		}
+	}
+
+	inputSecretList, err := parseUnstructuredSecret(input)
+	if err != nil {
+		return "", "", fmt.Errorf("error parsing inputSecret secret: %w", err)
 	}
 
 	for _, inputSecret := range inputSecretList {
 		externalSecret, err := convertSecret2ExtSecret(inputSecret, storeType, storeName, creationPolicy, resolve)
-		// handle error
 		if err != nil {
 			switch err.Error() {
 			case fmt.Errorf(ErrCommonNotIncludeAngleBrackets, inputSecret.Name).Error():
-				_, _ = fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				warn += fmt.Sprintf("Error: %v\n", err)
 				continue
 			case fmt.Errorf(ErrCommonEmptyAnnotations, inputSecret.Name).Error():
-				_, _ = fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				warn += fmt.Sprintf("Error: %v\n", err)
 				continue
 			}
-			return fmt.Errorf("error converting secret to external secret: %s", err.Error())
+			return "", "", fmt.Errorf("error converting secret to external secret: %s", err.Error())
 		}
 		yamlData, err := yaml.Marshal(externalSecret)
 		if err != nil {
-			return fmt.Errorf("error encoding external secret: %w", err)
+			return "", "", fmt.Errorf("error encoding external secret: %w", err)
 		}
-
-		// remove the status field
-		fmt.Printf("---\n")
-		fmt.Printf("%s", postProcessOutputES(yamlData))
+		output += fmt.Sprintf("---\n%s", postProcessOutputES(yamlData))
 	}
 
-	return nil
+	return output, warn, nil
 }
 
 func postProcessOutputES(yamlData []byte) string {
@@ -54,7 +77,7 @@ func postProcessOutputES(yamlData []byte) string {
 		return string(yamlData)
 	}
 
-	// delete status 字段
+	// delete status field
 	delete(externalSecret, "status")
 
 	// delete metadata.creationTimestamp of yamlData

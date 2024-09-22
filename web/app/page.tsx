@@ -9,10 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ArrowRight, Info } from "lucide-react"
+import { ArrowRight, Info, X } from "lucide-react"
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { toast } from 'react-hot-toast';
 
 type EnvVar = { key: string; value: string };
 
@@ -37,6 +38,13 @@ export default function Home() {
   const [envVars, setEnvVars] = React.useState<EnvVar[]>([{ key: '', value: '' }])
   const [error, setError] = React.useState<string | null>(null)
   const [contentHeight, setContentHeight] = React.useState(DEFAULT_HEIGHT)
+  const [isFormValid, setIsFormValid] = React.useState(false)
+  const [warning, setWarning] = React.useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    setIsFormValid(storeName.trim() !== '' && !error);
+  }, [storeName, error]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -52,14 +60,14 @@ export default function Home() {
   }
 
   const handleConvert = async () => {
-    if (error) return;
+    if (!isFormValid) return;
     try {
       const envVarsObject = envVars.reduce((acc, { key, value }) => {
         if (key) acc[key] = value;
         return acc;
       }, {} as Record<string, string>);
 
-      const response = await fetch('http://localhost:8080/api/convert', {
+      const response = await fetch('/api/convert', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,13 +82,25 @@ export default function Home() {
         }),
       })
       const data = await response.json()
-      setOutputYaml(data.result)
-      const outputLineCount = data.result.split('\n').length;
-      const newHeight = `${Math.max(parseInt(contentHeight), outputLineCount * LINE_HEIGHT)}px`;
-      setContentHeight(newHeight);
+      if (response.ok) {
+        setOutputYaml(data.result)
+        if (data.warnings) {
+          setWarning(data.warnings)
+        }
+        setErrorMessage(null)
+        const outputLineCount = data.result.split('\n').length;
+        const newHeight = `${Math.max(parseInt(contentHeight), outputLineCount * LINE_HEIGHT)}px`;
+        setContentHeight(newHeight);
+      } else {
+        setErrorMessage(data.error || 'An error occurred during conversion')
+        setOutputYaml('')
+        setWarning(null)
+      }
     } catch (error) {
       console.error('Error converting YAML:', error)
-      setOutputYaml('Error converting YAML. Please try again.')
+      setErrorMessage('Error converting YAML. Please try again.')
+      setOutputYaml('')
+      setWarning(null)
     }
   }
 
@@ -94,13 +114,32 @@ export default function Home() {
     setEnvVars(newEnvVars)
   }
 
+  const closeWarning = () => {
+    setWarning(null)
+  }
+
+  const closeError = () => {
+    setErrorMessage(null)
+  }
+
+  const handleOutputDoubleClick = () => {
+    if (outputYaml) {
+      navigator.clipboard.writeText(outputYaml).then(() => {
+        toast.success('Copied to clipboard!');
+      }).catch((err) => {
+        console.error('Failed to copy text: ', err);
+        toast.error('Failed to copy to clipboard');
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 flex-grow flex">
       <div className="w-1/6 pr-4 flex flex-col">
         <Button
           onClick={handleConvert}
           className="w-full px-4 py-2 text-base bg-blue-500 hover:bg-blue-600 text-white mb-4"
-          disabled={!!error}
+          disabled={!isFormValid}
         >
           Convert
         </Button>
@@ -221,7 +260,7 @@ export default function Home() {
           </div>
         )}
       </div>
-      <div className="w-5/6 flex items-start">
+      <div className="w-5/6 flex items-start relative">
         <div className="w-[48%]">
           <div style={{ height: contentHeight, minHeight: DEFAULT_HEIGHT }} className="relative rounded-md overflow-hidden">
             <SyntaxHighlighter
@@ -255,7 +294,11 @@ export default function Home() {
           <ArrowRight className="h-10 w-10 text-blue-500" />
         </div>
         <div className="w-[48%]">
-          <div style={{ height: contentHeight, minHeight: DEFAULT_HEIGHT }} className="rounded-md overflow-hidden">
+          <div
+            style={{ height: contentHeight, minHeight: DEFAULT_HEIGHT }}
+            className="rounded-md overflow-hidden cursor-pointer"
+            onDoubleClick={handleOutputDoubleClick}
+          >
             <SyntaxHighlighter
               language="yaml"
               style={tomorrow}
@@ -273,6 +316,28 @@ export default function Home() {
             </SyntaxHighlighter>
           </div>
         </div>
+        {warning && (
+          <div className="absolute top-0 right-0 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 max-w-md">
+            <div className="flex justify-between items-start">
+              <p className="font-bold">Warning</p>
+              <button onClick={closeWarning} className="text-yellow-700 hover:text-yellow-900">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="mt-2">{warning}</p>
+          </div>
+        )}
+        {errorMessage && (
+          <div className="absolute top-0 right-0 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 max-w-md">
+            <div className="flex justify-between items-start">
+              <p className="font-bold">Error</p>
+              <button onClick={closeError} className="text-red-700 hover:text-red-900">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="mt-2">{errorMessage}</p>
+          </div>
+        )}
       </div>
     </div>
   )

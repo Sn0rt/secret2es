@@ -1,12 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
+import { Analytics } from "@vercel/analytics/react"
 
 const Header: React.FC = () => {
   return (
     <header className="bg-gray-800 text-white p-3 flex justify-between items-center">
       <div>
         <h1 className="text-2xl font-bold">secret2es</h1>
-        <p className="text-base">Convert Kubernetes Secrets to External Secrets</p>
+        <p className="text-base">Convert AVP Secrets to External Secrets</p>
       </div>
       <Link
         href="https://github.com/Sn0rt/secret2es/issues"
@@ -16,7 +17,9 @@ const Header: React.FC = () => {
       >
         Feedback
       </Link>
+      <Analytics />
     </header>
+
   );
 };
 
