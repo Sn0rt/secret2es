@@ -28,3 +28,4 @@ go.work
 secret2es
 /vendor
 
+.vercel
