@@ -2,9 +2,9 @@
 
 install_test_foo() {
     vault kv put secret/test-foo my-value=from_vault_sn0rt
-    vault kv patch secret/test-foo TEST_USERNAME=from_vault_true_username
-    vault kv patch secret/test-foo TEST_PASSWORD=from_vault_true_password
-    vault kv patch secret/test-foo TEST_DIST_LINUX=from_vault_Gentoo
+    vault kv patch secret/test-foo TEST_USERNAME=ZnJvbV92YXVsdF90cnVlX3VzZXJuYW1lCg== #from_vault_true_username
+    vault kv patch secret/test-foo TEST_PASSWORD=ZnJvbV92YXVsdF90cnVlX3Bhc3N3b3JkCg== #from_vault_true_password
+    vault kv patch secret/test-foo TEST_DIST_LINUX=ZnJvbV92YXVsdF9HZW50b28K #from_vault_Gentoo
     vault kv patch secret/test-foo MYSQL_PASSWD=from_vault_mysql_password
     vault kv patch secret/test-foo MYSQL_USER=from_vault_mysql_user
     vault kv patch secret/test-foo ACCESS_KEY=from_vault_ac_123123123
