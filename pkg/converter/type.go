@@ -5,6 +5,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
+	"regexp"
 	"runtime/debug"
 	"sigs.k8s.io/yaml"
 	"strings"
@@ -56,8 +57,10 @@ type internalSecret struct {
 }
 
 func splitYAMLDocuments(fileBody []byte) []string {
+	re := regexp.MustCompile(`(?m)^---$`)
 	fileBodyWithoutCommented := processCommented(fileBody)
-	return strings.Split(string(fileBodyWithoutCommented), "---")
+	potentialDocs := re.Split(string(fileBodyWithoutCommented), -1)
+	return potentialDocs
 }
 
 func parseUnstructuredSecret(body []byte) ([]internalSecret, error) {
