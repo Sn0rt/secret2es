@@ -207,6 +207,11 @@ func TestResolveAngleBrackets(t *testing.T) {
 			expectString:   "password = {{ .MYSQL_PASSWD }}",
 		},
 		{
+			name:           "nested_angle_brackets",
+			originalString: "password = <<%ENV%>_MYSQL_PASSWD>",
+			expectString:   "password = {{ .<%ENV%>_MYSQL_PASSWD }}",
+		},
+		{
 			name: "simple_file",
 			originalString: `
 [client]
@@ -335,8 +340,16 @@ func TestAddQuotesForCurlyBraces(t *testing.T) {
 			expectString:   `"{{ .MYSQL_PASSWD }}"`,
 		},
 		{
+			originalString: `{{ .<% ENV %>_MYSQL_PASSWD }}`,
+			expectString:   `"{{ .<% ENV %>_MYSQL_PASSWD }}"`,
+		},
+		{
 			originalString: `password = {{ .MYSQL_PASSWD }}`,
 			expectString:   `password = "{{ .MYSQL_PASSWD }}"`,
+		},
+		{
+			originalString: `password = {{ .MYSQL_PASSWD }}-<% ENV %>`,
+			expectString:   `password = "{{ .MYSQL_PASSWD }}-<% ENV %>"`,
 		},
 		{
 			originalString: `[client]
