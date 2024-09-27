@@ -79,7 +79,7 @@ data:
 								MetadataPolicy:     "None",
 								Property:           "TLS_KEY_VAULT",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "Auto",
+								DecodingStrategy:   "Base64",
 							},
 						},
 					},
@@ -150,7 +150,7 @@ data:
 								MetadataPolicy:     "None",
 								Property:           "TLS_KEY_VAULT",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "Auto",
+								DecodingStrategy:   "Base64",
 							},
 						},
 					},
@@ -234,7 +234,112 @@ data:
 								MetadataPolicy:     "None",
 								Property:           "TLS_KEY_VAULT",
 								ConversionStrategy: "Default",
-								DecodingStrategy:   "Auto",
+								DecodingStrategy:   "Base64",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "set cert with pain text",
+			store: esv1beta1.SecretStoreRef{
+				Name: "tenant-b",
+				Kind: "ClusterSecretStore",
+			},
+			input: []byte(`
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: set-cert-with-pain-text
+  annotations:
+    avp.kubernetes.io/path: "secret/data/test-foo"
+  labels:
+    "app": "test"
+type: kubernetes.io/tls
+StringData:
+  tls.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIICrjCCAZYCCQCSxN7DmIw9TjANBgkqhkiG9w0BAQsFADAZMRcwFQYDVQQDDA55
+    b3VyZG9tYWluLmNvbTAeFw0yNDA4MjYwNjExNTJaFw0yNTA4MjYwNjExNTJaMBkx
+    FzAVBgNVBAMMDnlvdXJkb21haW4uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+    MIIBCgKCAQEAzId6C1MvfCwWLCjsgz10koFks6FIHlyU4IpP5mr+DETFNqJOZzvz
+    e+kxaE60lbCaT5zSf1d9eAc43KvoL5ypbyLVTbct+e6sX2okmistkqRdqr3m2oaH
+    2czJyHDUZrOvzJDGL2h4gTtM7AzlouZ7ub8fMABCGpymJi69s0FQCmCjImYGqrm6
+    yi9O7Uzxm9Znh3QhWglslRnKNhUHstr1nt4+Sl1e6LHAlrmO1yyRGRjatxuwSJa3
+    MFJxRgLtVnyL72fMf7sTwG7+l5W2hl3lyAmrxjNFr/0bzXpUdqgsGNmo87/46gRz
+    5PS+eW9S3pT6O7cdRT3q0w5Y6UHbtgHCwwIDAQABMA0GCSqGSIb3DQEBCwUAA4IB
+    AQAMGKzZKflNYpFJCs3L0KzLX+Za3tocAIA81cAu473DzonsPwpFZRtOyP3WAhsA
+    jZMr+giXdcyoZ5DA7DRI17E1H7ne1bh4zFkXDMGtd1vvW3LP5YaocqR9stc2/p4v
+    qTM7n6tjTjcdX4D6xnJHtsnauuPpMGbO50+N2+rhmMMn6OVjEFH+EiPbf35kRnHW
+    /7fz0ZumbLp5IjuacHS6arpGnJ4fN7R65SGkAi4Ko0VzU3M3YZrQgxWi+oZLzSPu
+    QFoyjXFX/BXADoohAnNZd7afVaZ2U722jhJJhI13KhltWodTOhPW+ZmlXxvfG/Zs
+    kuMRVfkhz0hiPXkLYEoA6e7s
+    -----END CERTIFICATE----
+  tls.key: <TLS_KEY_VAULT>`),
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "set-cert-with-pain-text",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "set-cert-with-pain-text",
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeTLS,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"tls.crt": `-----BEGIN CERTIFICATE-----
+MIICrjCCAZYCCQCSxN7DmIw9TjANBgkqhkiG9w0BAQsFADAZMRcwFQYDVQQDDA55
+b3VyZG9tYWluLmNvbTAeFw0yNDA4MjYwNjExNTJaFw0yNTA4MjYwNjExNTJaMBkx
+FzAVBgNVBAMMDnlvdXJkb21haW4uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAzId6C1MvfCwWLCjsgz10koFks6FIHlyU4IpP5mr+DETFNqJOZzvz
+e+kxaE60lbCaT5zSf1d9eAc43KvoL5ypbyLVTbct+e6sX2okmistkqRdqr3m2oaH
+2czJyHDUZrOvzJDGL2h4gTtM7AzlouZ7ub8fMABCGpymJi69s0FQCmCjImYGqrm6
+yi9O7Uzxm9Znh3QhWglslRnKNhUHstr1nt4+Sl1e6LHAlrmO1yyRGRjatxuwSJa3
+MFJxRgLtVnyL72fMf7sTwG7+l5W2hl3lyAmrxjNFr/0bzXpUdqgsGNmo87/46gRz
+5PS+eW9S3pT6O7cdRT3q0w5Y6UHbtgHCwwIDAQABMA0GCSqGSIb3DQEBCwUAA4IB
+AQAMGKzZKflNYpFJCs3L0KzLX+Za3tocAIA81cAu473DzonsPwpFZRtOyP3WAhsA
+jZMr+giXdcyoZ5DA7DRI17E1H7ne1bh4zFkXDMGtd1vvW3LP5YaocqR9stc2/p4v
+qTM7n6tjTjcdX4D6xnJHtsnauuPpMGbO50+N2+rhmMMn6OVjEFH+EiPbf35kRnHW
+/7fz0ZumbLp5IjuacHS6arpGnJ4fN7R65SGkAi4Ko0VzU3M3YZrQgxWi+oZLzSPu
+QFoyjXFX/BXADoohAnNZd7afVaZ2U722jhJJhI13KhltWodTOhPW+ZmlXxvfG/Zs
+kuMRVfkhz0hiPXkLYEoA6e7s
+-----END CERTIFICATE----
+`,
+								"tls.key": `"{{ .TLS_KEY_VAULT }}"`,
+							},
+						},
+					},
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "tenant-b",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "TLS_KEY_VAULT",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "test-foo",
+								MetadataPolicy:     "None",
+								Property:           "TLS_KEY_VAULT",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
 							},
 						},
 					},
