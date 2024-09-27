@@ -176,6 +176,105 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 			},
 		},
 		{
+			name: "test <<% ENV %>_VAULT>",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mix_two_style",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				StringData: map[string]string{
+					"env0": "<VAULT0>",
+					"env1": "<<% ENV1 %>_VAULT1>",
+					"env2": "<<% ENV2 %>_VAULT2>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mix_two_style",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "mix_two_style",
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"env0": `"{{ .VAULT0 }}"`,
+								"env1": `"{{ .<% ENV1 %>_VAULT1 }}"`,
+								"env2": `"{{ .<% ENV2 %>_VAULT2 }}"`,
+							},
+						},
+					},
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "test",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "VAULT0",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "VAULT0",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+						{
+							SecretKey: "<% ENV1 %>_VAULT1",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "<% ENV1 %>_VAULT1",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+						{
+							SecretKey: "<% ENV2 %>_VAULT2",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "<% ENV2 %>_VAULT2",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "None",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name:          "opaque type secret with path <% ENV %> and stringData",
 			enableResolve: true,
 			inputSecret: internalSecret{
@@ -621,6 +720,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 		store                esv1beta1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
 		err                  error
+		enableResolve        bool
 	}{
 		{
 			name: "empty opaque type secret",
@@ -722,7 +822,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 			},
 		},
 		{
-			name: "opaque type secret with path <% ENV %>",
+			name:          "opaque type secret with path <% ENV %>",
+			enableResolve: true,
 			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
@@ -795,7 +896,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 			},
 		},
 		{
-			name: "opaque type secret with path <% ENV %> and multiple property",
+			name:          "opaque type secret with path <% ENV %> and multiple property",
+			enableResolve: true,
 			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
@@ -898,6 +1000,105 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 			},
 		},
 		{
+			name: "test <<% ENV %>_VAULT> with data",
+			inputSecret: internalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "v1",
+					Kind:       "Secret",
+				},
+				Type: corev1.SecretTypeOpaque,
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "mix_two_style",
+					Annotations: map[string]string{
+						"avp.kubernetes.io/path": "secret/data/foo",
+					},
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Data: map[string]string{
+					"env0": "<VAULT0>",
+					"env1": "<<% ENV1 %>_VAULT1>",
+					"env2": "<<% ENV2 %>_VAULT2>",
+				},
+			},
+			store: esv1beta1.SecretStoreRef{
+				Name: "test",
+				Kind: "ClusterSecretStore",
+			},
+			expectExternalSecret: esv1beta1.ExternalSecret{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "external-secrets.io/v1beta1",
+					Kind:       "ExternalSecret",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mix_two_style",
+					Namespace: "",
+					Labels: map[string]string{
+						"app": "test",
+					},
+				},
+				Spec: esv1beta1.ExternalSecretSpec{
+					RefreshInterval: stopRefreshInterval,
+					Target: esv1beta1.ExternalSecretTarget{
+						Name:           "mix_two_style",
+						CreationPolicy: esv1beta1.CreatePolicyOrphan,
+						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
+						Template: &esv1beta1.ExternalSecretTemplate{
+							Type: corev1.SecretTypeOpaque,
+							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+								Labels: map[string]string{
+									"app": "test",
+								},
+							},
+							MergePolicy: esv1beta1.MergePolicyReplace,
+							Data: map[string]string{
+								"env0": `"{{ .VAULT0 }}"`,
+								"env1": `"{{ .<% ENV1 %>_VAULT1 }}"`,
+								"env2": `"{{ .<% ENV2 %>_VAULT2 }}"`,
+							},
+						},
+					},
+					SecretStoreRef: esv1beta1.SecretStoreRef{
+						Name: "test",
+						Kind: "ClusterSecretStore",
+					},
+					Data: []esv1beta1.ExternalSecretData{
+						{
+							SecretKey: "VAULT0",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "VAULT0",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "Base64",
+							},
+						},
+						{
+							SecretKey: "<% ENV1 %>_VAULT1",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "<% ENV1 %>_VAULT1",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "Base64",
+							},
+						},
+						{
+							SecretKey: "<% ENV2 %>_VAULT2",
+							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+								Key:                "foo",
+								MetadataPolicy:     "None",
+								Property:           "<% ENV2 %>_VAULT2",
+								ConversionStrategy: "Default",
+								DecodingStrategy:   "Base64",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "resolve the value from env",
 			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
@@ -953,7 +1154,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 			err: fmt.Errorf(ErrCommonNotNeedRefData, "set_env_with_body_no_gen_es_1"),
 		},
 		{
-			name: "resolve the value from env case 2",
+			name:          "resolve the value from env case 2",
+			enableResolve: true,
 			inputSecret: internalSecret{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "v1",
@@ -1068,7 +1270,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, true)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, tt.enableResolve)
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
