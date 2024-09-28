@@ -44,26 +44,8 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 	case opaqueDataType:
 		// 1. resolve the <% KEY %> from ENV
 		if isResolve {
-			for fileName, fileContent := range inputSecret.Data {
-				propertyFromSecretData := captureFromFile.FindAllStringSubmatch(fileContent, -1)
-				// simple case, no need to resolve
-				if len(propertyFromSecretData) == 0 {
-					templateData[fileName] = fileContent
-					continue
-				}
-
-				// resolve the secret key from file content
-				for idx, _ := range propertyFromSecretData {
-					// process if match <% ... %>
-					if strings.HasPrefix(propertyFromSecretData[idx][0], "<%") &&
-						strings.HasSuffix(propertyFromSecretData[idx][0], "%>") {
-						inputSecret.Data[fileName], err = resolved(fileContent)
-						if err != nil {
-							return nil, err
-						}
-						continue
-					}
-				}
+			if err := resolveSecret(inputSecret); err != nil {
+				return nil, err
 			}
 		}
 
@@ -120,26 +102,8 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 	case opaqueStringDataType:
 		// 1. resolve the <% KEY %> from ENV
 		if isResolve {
-			for fileName, fileContent := range inputSecret.StringData {
-				propertyFromSecretData := captureFromFile.FindAllStringSubmatch(fileContent, -1)
-				// simple case, no need to resolve
-				if len(propertyFromSecretData) == 0 {
-					templateData[fileName] = fileContent
-					continue
-				}
-
-				// resolve the secret key from file content
-				for idx, _ := range propertyFromSecretData {
-					// process if match <% ... %>
-					if strings.HasPrefix(propertyFromSecretData[idx][0], "<%") &&
-						strings.HasSuffix(propertyFromSecretData[idx][0], "%>") {
-						inputSecret.StringData[fileName], err = resolved(fileContent)
-						if err != nil {
-							return nil, err
-						}
-						continue
-					}
-				}
+			if err := resolveSecret(inputSecret); err != nil {
+				return nil, err
 			}
 		}
 
@@ -233,6 +197,44 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			Data: externalSecretData,
 		},
 	}, nil
+}
+
+func resolveSecret(inputSecret *internalSecret) (err error) {
+	for fileName, fileContent := range inputSecret.Data {
+		propertyFromSecretData := captureFromFile.FindAllStringSubmatch(fileContent, -1)
+		// simple case, no need to resolve
+
+		// resolve the secret key from file content
+		for idx, _ := range propertyFromSecretData {
+			if strings.HasPrefix(propertyFromSecretData[idx][0], "<%") &&
+				strings.HasSuffix(propertyFromSecretData[idx][0], "%>") {
+				inputSecret.Data[fileName], err = resolved(fileContent)
+				if err != nil {
+					return err
+				}
+				continue
+			}
+		}
+	}
+
+	for fileName, fileContent := range inputSecret.StringData {
+		propertyFromSecretData := captureFromFile.FindAllStringSubmatch(fileContent, -1)
+
+		// resolve the secret key from file content
+		for idx, _ := range propertyFromSecretData {
+			// process if match <% ... %>
+			if strings.HasPrefix(propertyFromSecretData[idx][0], "<%") &&
+				strings.HasSuffix(propertyFromSecretData[idx][0], "%>") {
+				inputSecret.StringData[fileName], err = resolved(fileContent)
+				if err != nil {
+					return err
+				}
+				continue
+			}
+		}
+	}
+
+	return nil
 }
 
 func IsBase64(s string) bool {
