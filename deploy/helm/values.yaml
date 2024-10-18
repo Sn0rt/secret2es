@@ -1,0 +1,16 @@
+image:
+  repository: wangguohao/secret2es
+  tag: dev
+
+replicaCount: 1
+
+env:
+  frontend:
+    PORT: 3000
+    HOSTNAME: "0.0.0.0"
+  backend:
+    PORT: 3001
+
+ingress:
+  enabled: true
+  host: localhost
