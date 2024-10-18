@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-secret2es
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: secret2es
+  template:
+    metadata:
+      labels:
+        app: secret2es
+    spec:
+      containers:
+      - name: frontend
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        workingDir: /app/web
+        command: ["node", "/app/server.js"]
+        ports:
+        - containerPort: {{ .Values.env.frontend.PORT }}
+          name: frontend
+        env:
+        - name: HOSTNAME
+          value: {{ .Values.env.frontend.HOSTNAME | default "0.0.0.0" | quote }}
+        - name: PORT
+          value: {{ .Values.env.frontend.PORT | default "3000" | quote }}
+      - name: backend
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        command: ["/app/secret2es-server"]
+        ports:
+        - containerPort: {{ .Values.env.backend.PORT }}
+          name: backend
+        env:
+        - name: SERVER_PORT
+          value: {{ .Values.env.backend.SERVER_PORT | default "3001" | quote }}

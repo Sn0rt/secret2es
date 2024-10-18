@@ -10,9 +10,9 @@ import (
 func main() {
 	http.HandleFunc("/api/convert", Handler)
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("SERVER_PORT")
 	if port == "" {
-		port = "8080"
+		port = "3001"
 	}
 
 	fmt.Printf("Server is running on port %s\n", port)
