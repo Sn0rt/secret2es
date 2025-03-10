@@ -77,6 +77,8 @@ jobs:
             arch: arm64
           - os: linux
             arch: amd64
+          - os: darwin
+            arch: arm64
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -88,8 +90,13 @@ jobs:
         with:
           go-version: '1.22.5'
 
-      - name: Get BINARY_NAME from Makefile
-        run: echo "BINARY_NAME=secret2es" >> $GITHUB_ENV
+      - name: Set build variables
+        id: vars
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          echo "BINARY_NAME=secret2es" >> $GITHUB_ENV
 
       - name: Build binary
         env:
