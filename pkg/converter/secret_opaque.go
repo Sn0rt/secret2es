@@ -120,7 +120,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			resolvedFileContent := fileContent
 
 			// resolve the secret key from file content
-			for idx, _ := range propertyFromSecretData {
+			for idx := range propertyFromSecretData {
 				if strings.HasPrefix(propertyFromSecretData[idx][0], "<%") &&
 					strings.HasSuffix(propertyFromSecretData[idx][0], "%>") {
 					continue
@@ -205,7 +205,7 @@ func resolveSecret(inputSecret *internalSecret) (err error) {
 		// simple case, no need to resolve
 
 		// resolve the secret key from file content
-		for idx, _ := range propertyFromSecretData {
+		for idx := range propertyFromSecretData {
 			if strings.HasPrefix(propertyFromSecretData[idx][0], "<%") &&
 				strings.HasSuffix(propertyFromSecretData[idx][0], "%>") {
 				inputSecret.Data[fileName], err = resolved(fileContent)
@@ -221,7 +221,7 @@ func resolveSecret(inputSecret *internalSecret) (err error) {
 		propertyFromSecretData := captureFromFile.FindAllStringSubmatch(fileContent, -1)
 
 		// resolve the secret key from file content
-		for idx, _ := range propertyFromSecretData {
+		for idx := range propertyFromSecretData {
 			// process if match <% ... %>
 			if strings.HasPrefix(propertyFromSecretData[idx][0], "<%") &&
 				strings.HasSuffix(propertyFromSecretData[idx][0], "%>") {

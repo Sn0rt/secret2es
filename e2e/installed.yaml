@@ -96,7 +96,7 @@ stringData:
         },
         "https://index.docker.io:8443/v1": {
           "auth": "PASSWD_FROM_VAULT"
-        }      
+        }
       }
     }
 ---

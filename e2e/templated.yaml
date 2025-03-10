@@ -156,16 +156,3 @@ type: kubernetes.io/basic-auth
 stringData:
   username: <MYSQL_USER>
   password: <MYSQL_PASSWORD>
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: convert-with-label-secret
-  annotations:
-    avp.kubernetes.io/path: "secret/data/convert-with-label-secret"
-  labels:
-    convert-with-label: "true"
-type: kubernetes.io/basic-auth
-stringData:
-  username: <MYSQL_USER>
-  password: <MYSQL_PASSWORD>

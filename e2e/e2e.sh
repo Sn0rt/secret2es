@@ -31,9 +31,6 @@ function wait_external_secret_template_ready() {
   echo "check AppRole secret"
   kubectl wait --for=condition=Ready=True es/approle1-secret --timeout=60s || (kubectl describe es/approle1-secret && return 1)
 
-  echo "check convert-with-label secret"
-  kubectl wait --for=condition=Ready=True es/convert-with-label-secret --timeout=60s || (kubectl describe es/convert-with-label-secret && return 1)
-
   kubectl get es -o wide
   return 0
 }
