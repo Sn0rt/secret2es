@@ -131,7 +131,7 @@ stringData:
         },
         "https://index.docker.io:8443/v1": {
           "auth": "<TEST_PASSWORD>"
-        }      
+        }
       }
     }
 ---
@@ -152,6 +152,19 @@ metadata:
   name: approle1-secret
   annotations:
     avp.kubernetes.io/path: "secret/data/approle1-secret"
+type: kubernetes.io/basic-auth
+stringData:
+  username: <MYSQL_USER>
+  password: <MYSQL_PASSWORD>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: convert-with-label-secret
+  annotations:
+    avp.kubernetes.io/path: "secret/data/convert-with-label-secret"
+  labels:
+    convert-with-label: "true"
 type: kubernetes.io/basic-auth
 stringData:
   username: <MYSQL_USER>
