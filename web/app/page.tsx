@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ArrowRight, Info, X } from "lucide-react"
+import { ArrowRight, Info, X, Loader2 } from "lucide-react"
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -41,6 +41,7 @@ export default function Home() {
   const [isFormValid, setIsFormValid] = React.useState(false)
   const [warning, setWarning] = React.useState<string | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false)
 
   React.useEffect(() => {
     setIsFormValid(storeName.trim() !== '' && !error);
@@ -61,6 +62,9 @@ export default function Home() {
 
   const handleConvert = async () => {
     if (!isFormValid) return;
+
+    setIsLoading(true);
+
     try {
       const envVarsObject = envVars.reduce((acc, { key, value }) => {
         if (key) acc[key] = value;
@@ -101,6 +105,8 @@ export default function Home() {
       setErrorMessage('Error converting YAML. Please try again.')
       setOutputYaml('')
       setWarning(null)
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -136,13 +142,6 @@ export default function Home() {
   return (
     <div className="container mx-auto p-4 flex-grow flex">
       <div className="w-1/6 pr-4 flex flex-col">
-        <Button
-          onClick={handleConvert}
-          className="w-full px-4 py-2 text-base bg-blue-500 hover:bg-blue-600 text-white mb-4"
-          disabled={!isFormValid}
-        >
-          Convert
-        </Button>
         <div>
           <label className="block mb-1 text-base">
             Store Type
@@ -235,6 +234,20 @@ export default function Home() {
             </TooltipProvider>
           </label>
         </div>
+        <Button
+          onClick={handleConvert}
+          className="w-full px-4 py-2 text-base bg-blue-500 hover:bg-blue-600 text-white my-4"
+          disabled={!isFormValid || isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Converting...
+            </>
+          ) : (
+            'Convert'
+          )}
+        </Button>
         {resolve && (
           <div>
             <h3 className="font-bold mb-2 text-base">Environment Variables</h3>
