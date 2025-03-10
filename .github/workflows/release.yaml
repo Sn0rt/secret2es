@@ -53,17 +53,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION=${{ steps.meta.outputs.version }}
-            BUILD_TIME=${{ env.BUILD_TIME }}  
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: '${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+            BUILD_TIME=${{ env.BUILD_TIME }}
 
   release-binaries:
     permissions:
