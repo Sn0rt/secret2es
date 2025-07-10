@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -66,7 +66,7 @@ func extSecretGenCmd() *cobra.Command {
 				return err
 			}
 
-			err = converter.ConvertSecret(inputPath, storeType, storeName, esv1beta1.ExternalSecretCreationPolicy(creationPolicy), resolve)
+			err = converter.ConvertSecret(inputPath, storeType, storeName, esv1.ExternalSecretCreationPolicy(creationPolicy), resolve)
 			if err != nil {
 				return err
 			}

@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"strings"
 
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 
 	"github.com/Sn0rt/secret2es/pkg/converter"
 )
@@ -75,13 +75,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		[]byte(request.Content),
 		request.StoreType,
 		request.StoreName,
-		esv1beta1.ExternalSecretCreationPolicy(request.CreationPolicy),
+		esv1.ExternalSecretCreationPolicy(request.CreationPolicy),
 		request.Resolve,
 		request.EnvVars,
 	)
 
 	if err != nil {
-		http.Error(w, "Conversion error: "+err.Error(), http.StatusInternalServerError)
+		errorResponse := map[string]string{
+			"error": "Conversion error: " + err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(errorResponse)
 		return
 	}
 

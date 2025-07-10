@@ -8,13 +8,13 @@ on:
   pull_request: {}
 
 env:
-  ENV: 'TEST'
+  ENV: "TEST"
 
 jobs:
   detect-noop:
     permissions:
-      actions: write  # for fkirc/skip-duplicate-actions to skip or stop workflow runs
-      contents: read  # for fkirc/skip-duplicate-actions to read and compare commits
+      actions: write # for fkirc/skip-duplicate-actions to skip or stop workflow runs
+      contents: read # for fkirc/skip-duplicate-actions to read and compare commits
     runs-on: ubuntu-latest
     outputs:
       noop: ${{ steps.noop.outputs.should_skip }}
@@ -30,8 +30,8 @@ jobs:
 
   lint:
     permissions:
-      contents: read  # for actions/checkout to fetch code
-      pull-requests: read  # for golangci/golangci-lint-action to fetch pull requests
+      contents: read # for actions/checkout to fetch code
+      pull-requests: read # for golangci/golangci-lint-action to fetch pull requests
     runs-on: ubuntu-latest
     needs: detect-noop
     if: needs.detect-noop.outputs.noop != 'true' && github.ref != 'refs/heads/main'
@@ -54,6 +54,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           skip-cache: true
+          args: --timeout=5m
 
   unit-tests:
     runs-on: ubuntu-latest

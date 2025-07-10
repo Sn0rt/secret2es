@@ -2,7 +2,7 @@ package converter
 
 import (
 	"fmt"
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	corev1 "k8s.io/api/core/v1"
 	"os"
 	"sigs.k8s.io/yaml"
@@ -10,7 +10,7 @@ import (
 )
 
 // ConvertSecret converts a AVP Secret to an ExternalSecret for CLI
-func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) error {
+func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1.ExternalSecretCreationPolicy, resolve bool) error {
 	bytes, err := os.ReadFile(inputFile)
 	if err != nil {
 		return fmt.Errorf("error reading inputSecret file: %w", err)
@@ -31,7 +31,7 @@ func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1be
 }
 
 func ConvertSecretContent(input []byte, storeType, storeName string,
-	creationPolicy esv1beta1.ExternalSecretCreationPolicy,
+	creationPolicy esv1.ExternalSecretCreationPolicy,
 	resolve bool,
 	EnvVars map[string]string) (string, string, error) {
 	output := ""
@@ -135,7 +135,7 @@ func postProcessOutputES(yamlData []byte) string {
 }
 
 func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName string,
-	createPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) (*esv1beta1.ExternalSecret, error) {
+	createPolicy esv1.ExternalSecretCreationPolicy, resolve bool) (*esv1.ExternalSecret, error) {
 	if err := secretCommonVerify(inputSecret); err != nil {
 		return nil, err
 	}
@@ -145,9 +145,9 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 		return nil, fmt.Errorf(illegalStoreType, storeType)
 	}
 
-	if createPolicy != esv1beta1.CreatePolicyOwner &&
-		createPolicy != esv1beta1.CreatePolicyOrphan &&
-		createPolicy != esv1beta1.CreatePolicyMerge {
+	if createPolicy != esv1.CreatePolicyOwner &&
+		createPolicy != esv1.CreatePolicyOrphan &&
+		createPolicy != esv1.CreatePolicyMerge {
 		return nil, fmt.Errorf(illegalCreatePolicy, createPolicy)
 	}
 

@@ -1,7 +1,7 @@
 package converter
 
 import (
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,12 +12,12 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 	var tests = []struct {
 		name                 string
 		inputSecret          internalSecret
-		store                esv1beta1.SecretStoreRef
-		expectExternalSecret esv1beta1.ExternalSecret
+		store                esv1.SecretStoreRef
+		expectExternalSecret esv1.ExternalSecret
 	}{
 		{
 			name: "basic",
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "tenant-b",
 				Kind: "ClusterSecretStore",
 			},
@@ -49,9 +49,9 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 }`,
 				},
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -61,20 +61,20 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "input1",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeDockerConfigJson,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								".dockerconfigjson": `{
   "auths": {
@@ -89,14 +89,14 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "PASSWD_FROM_VAULT",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "test-foo",
 								MetadataPolicy:     "None",
 								Property:           "PASSWD_FROM_VAULT",
@@ -112,7 +112,7 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, true)
+			out, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, true)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {

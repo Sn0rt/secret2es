@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -22,7 +22,7 @@ const (
 )
 
 func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName string,
-	creationPolicy esv1beta1.ExternalSecretCreationPolicy, isResolve bool) (*esv1beta1.ExternalSecret, error) {
+	creationPolicy esv1.ExternalSecretCreationPolicy, isResolve bool) (*esv1.ExternalSecret, error) {
 	var currentSecretOpaqueSubType int
 	if len(inputSecret.Data) != 0 {
 		currentSecretOpaqueSubType = opaqueDataType
@@ -37,7 +37,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 	}
 
 	// for specific secret opaque sub-type
-	var externalSecretData []esv1beta1.ExternalSecretData
+	var externalSecretData []esv1.ExternalSecretData
 	var templateData = make(map[string]string)
 
 	switch currentSecretOpaqueSubType {
@@ -80,12 +80,12 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			}
 
 			if !contains(externalSecretData, propertyName) {
-				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
+				externalSecretData = append(externalSecretData, esv1.ExternalSecretData{
 					SecretKey: propertyName,
-					RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-						ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
-						DecodingStrategy:   esv1beta1.ExternalSecretDecodeBase64,
-						MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
+					RemoteRef: esv1.ExternalSecretDataRemoteRef{
+						ConversionStrategy: esv1.ExternalSecretConversionDefault,
+						DecodingStrategy:   esv1.ExternalSecretDecodeBase64,
+						MetadataPolicy:     esv1.ExternalSecretMetadataPolicyNone,
 						Key:                vaultSecretKey,
 						Property:           propertyName,
 					},
@@ -135,12 +135,12 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 
 				// if secret key not found in externalSecretData then append to slice
 				if !contains(externalSecretData, propertyName) {
-					externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
+					externalSecretData = append(externalSecretData, esv1.ExternalSecretData{
 						SecretKey: strings.TrimSpace(propertyName),
-						RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-							ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
-							DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
-							MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
+						RemoteRef: esv1.ExternalSecretDataRemoteRef{
+							ConversionStrategy: esv1.ExternalSecretConversionDefault,
+							DecodingStrategy:   esv1.ExternalSecretDecodeNone,
+							MetadataPolicy:     esv1.ExternalSecretMetadataPolicyNone,
 							Key:                vaultSecretKey,
 							Property:           strings.TrimSpace(propertyName),
 						},
@@ -165,9 +165,9 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		return nil, fmt.Errorf(ErrCommonNotNeedRefData, inputSecret.Name)
 	}
 
-	return &esv1beta1.ExternalSecret{
+	return &esv1.ExternalSecret{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "external-secrets.io/v1beta1",
+			APIVersion: "external-secrets.io/v1",
 			Kind:       "ExternalSecret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -175,22 +175,22 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			Namespace: inputSecret.Namespace,
 			Labels:    inputSecret.ObjectMeta.Labels,
 		},
-		Spec: esv1beta1.ExternalSecretSpec{
+		Spec: esv1.ExternalSecretSpec{
 			RefreshInterval: stopRefreshInterval,
-			SecretStoreRef: esv1beta1.SecretStoreRef{
+			SecretStoreRef: esv1.SecretStoreRef{
 				Name: storeName,
 				Kind: storeType,
 			},
-			Target: esv1beta1.ExternalSecretTarget{
+			Target: esv1.ExternalSecretTarget{
 				Name:           inputSecret.Name,
 				CreationPolicy: creationPolicy,
-				DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-				Template: &esv1beta1.ExternalSecretTemplate{
+				DeletionPolicy: esv1.DeletionPolicyRetain,
+				Template: &esv1.ExternalSecretTemplate{
 					Type: corev1.SecretTypeOpaque,
-					Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+					Metadata: esv1.ExternalSecretTemplateMetadata{
 						Labels: inputSecret.ObjectMeta.Labels,
 					},
-					MergePolicy: esv1beta1.MergePolicyReplace,
+					MergePolicy: esv1.MergePolicyReplace,
 					Data:        templateData,
 				},
 			},
@@ -242,7 +242,7 @@ func IsBase64(s string) bool {
 	return err == nil
 }
 
-func contains(data []esv1beta1.ExternalSecretData, output string) bool {
+func contains(data []esv1.ExternalSecretData, output string) bool {
 	for _, d := range data {
 		if d.SecretKey == output {
 			return true
