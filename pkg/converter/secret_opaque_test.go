@@ -2,7 +2,7 @@ package converter
 
 import (
 	"fmt"
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
@@ -15,8 +15,8 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 	tests := []struct {
 		name                 string
 		inputSecret          internalSecret
-		expectExternalSecret esv1beta1.ExternalSecret
-		store                esv1beta1.SecretStoreRef
+		expectExternalSecret esv1.ExternalSecret
+		store                esv1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
 		err                  error
 		enableResolve        bool
@@ -43,13 +43,13 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 					"env1": "<% ENV %>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -59,34 +59,34 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "simple_example",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"dist": `"{{ .dist-name-of-linux }}"`,
 								"env1": "<% ENV %>",
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "dist-name-of-linux",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "dist-name-of-linux",
@@ -120,13 +120,13 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 					"env1": "<% ENV %>-<dist-name-of-linux>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -136,34 +136,34 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "mix_env_value_with_vault",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"dist": `"{{ .dist-name-of-linux }}"`,
 								"env1": `"<% ENV %>-{{ .dist-name-of-linux }}"`,
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "dist-name-of-linux",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "dist-name-of-linux",
@@ -198,13 +198,13 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 					"env2": "<<% ENV2 %>_VAULT2>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -214,20 +214,20 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "mix_two_style",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"env0": `"{{ .VAULT0 }}"`,
 								"env1": `"{{ .<% ENV1 %>_VAULT1 }}"`,
@@ -235,14 +235,14 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "VAULT0",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "VAULT0",
@@ -252,7 +252,7 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 						},
 						{
 							SecretKey: "<% ENV1 %>_VAULT1",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "<% ENV1 %>_VAULT1",
@@ -262,7 +262,7 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 						},
 						{
 							SecretKey: "<% ENV2 %>_VAULT2",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "<% ENV2 %>_VAULT2",
@@ -300,7 +300,7 @@ password = <MYSQL_PASSWD>
 port = 4000`,
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Kind: "ClusterSecretStore",
 				Name: "tenant-a",
 			},
@@ -308,9 +308,9 @@ port = 4000`,
 				"DIST": "ubuntu",
 				"VER":  "22.04",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -320,16 +320,16 @@ port = 4000`,
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-a",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "USER",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
 								Property:           "USER",
@@ -339,7 +339,7 @@ port = 4000`,
 						},
 						{
 							SecretKey: "MYSQL_PASSWD",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
 								Property:           "MYSQL_PASSWD",
@@ -348,18 +348,18 @@ port = 4000`,
 							},
 						},
 					},
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "string_data_example",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"mylogin.conf": `[client]
 host = example.com
@@ -397,7 +397,7 @@ port = 4000`,
 					"sn0rt.github.io.default.key":        "key",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Kind: "ClusterSecretStore",
 				Name: "tenant-b",
 			},
@@ -405,9 +405,9 @@ port = 4000`,
 				"DIST": "ubuntu",
 				"VER":  "22.04",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -417,16 +417,16 @@ port = 4000`,
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "USER_ACCESS_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
 								Property:           "USER_ACCESS_KEY",
@@ -436,7 +436,7 @@ port = 4000`,
 						},
 						{
 							SecretKey: "USER_SECRET_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
 								Property:           "USER_SECRET_KEY",
@@ -445,18 +445,18 @@ port = 4000`,
 							},
 						},
 					},
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "string_data_multiple_example",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
 								"sn0rt.github.io.default.secret_key": `"{{ .USER_SECRET_KEY }}"`,
@@ -492,7 +492,7 @@ port = 4000`,
 					"sn0rt.github.io.default.key":        "key",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Kind: "ClusterSecretStore",
 				Name: "tenant-b",
 			},
@@ -501,9 +501,9 @@ port = 4000`,
 				"VER":             "22.04",
 				"USER_SECRET_KEY": "secret_key",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -513,16 +513,16 @@ port = 4000`,
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "USER_ACCESS_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "USER_ACCESS_KEY",
@@ -531,18 +531,18 @@ port = 4000`,
 							},
 						},
 					},
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "multiple_example_env_with_stringData",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"sn0rt.github.io.default.access_key": `"{{ .USER_ACCESS_KEY }}"`,
 								"sn0rt.github.io.default.key":        "key",
@@ -576,7 +576,7 @@ port = 4000`,
 					"sn0rt.github.io.default.key":        "key", // merge policy should ignore this
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Kind: "ClusterSecretStore",
 				Name: "tenant-b",
 			},
@@ -613,7 +613,7 @@ config:
   secret_key: <S3_SECRET_KEY>`,
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Kind: "ClusterSecretStore",
 				Name: "tenant-b",
 			},
@@ -621,9 +621,9 @@ config:
 				"DIST": "ubuntu",
 				"VER":  "22.04",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -633,16 +633,16 @@ config:
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "S3_ACCESS_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "S3_ACCESS_KEY",
@@ -652,7 +652,7 @@ config:
 						},
 						{
 							SecretKey: "S3_SECRET_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "S3_SECRET_KEY",
@@ -661,18 +661,18 @@ config:
 							},
 						},
 					},
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "both_env_and_key_stringData",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"config.yaml": `type: S3
 prefix: "test/ubuntu"
@@ -693,7 +693,7 @@ config:
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, tt.enableResolve)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, tt.enableResolve)
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -701,7 +701,7 @@ config:
 				}
 			} else {
 				diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(
-					func(a, b esv1beta1.ExternalSecretData) bool {
+					func(a, b esv1.ExternalSecretData) bool {
 						return a.SecretKey > b.SecretKey
 					}))
 				if diff != "" {
@@ -716,8 +716,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 	tests := []struct {
 		name                 string
 		inputSecret          internalSecret
-		expectExternalSecret esv1beta1.ExternalSecret
-		store                esv1beta1.SecretStoreRef
+		expectExternalSecret esv1.ExternalSecret
+		store                esv1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
 		err                  error
 		enableResolve        bool
@@ -740,7 +740,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					},
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
@@ -767,13 +767,13 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					"dist": "<dist-name-of-linux>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -783,33 +783,33 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "simple_example",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"dist": `"{{ .dist-name-of-linux }}"`,
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "dist-name-of-linux",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "dist-name-of-linux",
@@ -843,7 +843,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					"dist": "<dist-name-of-linux>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
@@ -851,9 +851,9 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 				"DIST": "ubuntu",
 				"VER":  "22.04",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -863,27 +863,27 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "multiple_env_with_path",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type:        corev1.SecretTypeOpaque,
-							Metadata:    esv1beta1.ExternalSecretTemplateMetadata{Labels: map[string]string{"app": "test"}},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							Metadata:    esv1.ExternalSecretTemplateMetadata{Labels: map[string]string{"app": "test"}},
+							MergePolicy: esv1.MergePolicyReplace,
 							Data:        map[string]string{"dist": `"{{ .dist-name-of-linux }}"`},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "dist-name-of-linux",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
 								Property:           "dist-name-of-linux",
@@ -919,7 +919,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					"passwd": "<github-passwd>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
@@ -927,9 +927,9 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 				"DIST": "ubuntu",
 				"VER":  "22.04",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -939,20 +939,20 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "multiple_property",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"dist":   `"{{ .dist-name-of-linux }}"`,
 								"passwd": `"{{ .github-passwd }}"`,
@@ -960,14 +960,14 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "dist-name-of-linux",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
 								Property:           "dist-name-of-linux",
@@ -977,7 +977,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						},
 						{
 							SecretKey: "github-username",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
 								Property:           "github-username",
@@ -987,7 +987,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						},
 						{
 							SecretKey: "github-passwd",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "ubuntu-22.04-foo",
 								MetadataPolicy:     "None",
 								Property:           "github-passwd",
@@ -1022,13 +1022,13 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					"env2": "<<% ENV2 %>_VAULT2>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -1038,20 +1038,20 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "mix_two_style",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"env0": `"{{ .VAULT0 }}"`,
 								"env1": `"{{ .<% ENV1 %>_VAULT1 }}"`,
@@ -1059,14 +1059,14 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "VAULT0",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "VAULT0",
@@ -1076,7 +1076,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						},
 						{
 							SecretKey: "<% ENV1 %>_VAULT1",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "<% ENV1 %>_VAULT1",
@@ -1086,7 +1086,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						},
 						{
 							SecretKey: "<% ENV2 %>_VAULT2",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "<% ENV2 %>_VAULT2",
@@ -1119,7 +1119,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					"data1": "data1",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
@@ -1147,7 +1147,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					"data2": "<% DIST %>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
@@ -1177,16 +1177,16 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					"data3": "<FROM_VAULT_DATA3>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
 			envs: map[string]string{
 				"DIST": "ubuntu",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -1196,20 +1196,20 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "set_env_with_body_no_gen_es_2",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"data1": "data1",
 								"data2": "ubuntu",
@@ -1217,14 +1217,14 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "FROM_VAULT_DATA3",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "FROM_VAULT_DATA3",
@@ -1257,7 +1257,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					"key1": "<admin>-<dist-name-of-linux>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
@@ -1270,7 +1270,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, tt.enableResolve)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, tt.enableResolve)
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -1278,7 +1278,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 				}
 			} else {
 				diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(
-					func(a, b esv1beta1.ExternalSecretData) bool {
+					func(a, b esv1.ExternalSecretData) bool {
 						return a.SecretKey > b.SecretKey
 					}))
 				if diff != "" {
@@ -1293,8 +1293,8 @@ func TestGenerateCreatePolicy(t *testing.T) {
 	tests := []struct {
 		name                 string
 		inputSecret          internalSecret
-		expectExternalSecret esv1beta1.ExternalSecret
-		store                esv1beta1.SecretStoreRef
+		expectExternalSecret esv1.ExternalSecret
+		store                esv1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
 		err                  error
 	}{
@@ -1319,13 +1319,13 @@ func TestGenerateCreatePolicy(t *testing.T) {
 					"dist": "<dist-name-of-linux>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -1335,33 +1335,33 @@ func TestGenerateCreatePolicy(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "simple_example",
-						CreationPolicy: esv1beta1.CreatePolicyOwner,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOwner,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"dist": `"{{ .dist-name-of-linux }}"`,
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "dist-name-of-linux",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "foo",
 								MetadataPolicy:     "None",
 								Property:           "dist-name-of-linux",
@@ -1380,7 +1380,7 @@ func TestGenerateCreatePolicy(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOwner, true)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOwner, true)
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -1388,7 +1388,7 @@ func TestGenerateCreatePolicy(t *testing.T) {
 				}
 			} else {
 				diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(
-					func(a, b esv1beta1.ExternalSecretData) bool {
+					func(a, b esv1.ExternalSecretData) bool {
 						return a.SecretKey > b.SecretKey
 					}))
 				if diff != "" {
@@ -1403,8 +1403,8 @@ func TestSkipResolveValue(t *testing.T) {
 	tests := []struct {
 		name                 string
 		inputSecret          internalSecret
-		expectExternalSecret esv1beta1.ExternalSecret
-		store                esv1beta1.SecretStoreRef
+		expectExternalSecret esv1.ExternalSecret
+		store                esv1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
 		err                  error
 	}{
@@ -1430,13 +1430,13 @@ func TestSkipResolveValue(t *testing.T) {
 					"env1": "<% ENV1 %>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -1446,34 +1446,34 @@ func TestSkipResolveValue(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "simple_example",
-						CreationPolicy: esv1beta1.CreatePolicyOwner,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOwner,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"dist": `"{{ .dist-name-of-linux }}"`,
 								"env1": "<% ENV1 %>",
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "dist-name-of-linux",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "<% ENV %>-test",
 								MetadataPolicy:     "None",
 								Property:           "dist-name-of-linux",
@@ -1508,13 +1508,13 @@ func TestSkipResolveValue(t *testing.T) {
 					"env2": "<% ENV1 %>-<dist-name-of-linux>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -1524,20 +1524,20 @@ func TestSkipResolveValue(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "mix_example1",
-						CreationPolicy: esv1beta1.CreatePolicyOwner,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOwner,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeOpaque,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"dist": `"{{ .dist-name-of-linux }}"`,
 								"env1": "<% ENV1 %>",
@@ -1545,14 +1545,14 @@ func TestSkipResolveValue(t *testing.T) {
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "test",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "dist-name-of-linux",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "<% ENV %>-test",
 								MetadataPolicy:     "None",
 								Property:           "dist-name-of-linux",
@@ -1585,7 +1585,7 @@ func TestSkipResolveValue(t *testing.T) {
 					"key": "<% ENV1 %>-<dist-name-of-linux>",
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
@@ -1598,7 +1598,7 @@ func TestSkipResolveValue(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOwner, false)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOwner, false)
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -1606,7 +1606,7 @@ func TestSkipResolveValue(t *testing.T) {
 				}
 			} else {
 				diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(
-					func(a, b esv1beta1.ExternalSecretData) bool {
+					func(a, b esv1.ExternalSecretData) bool {
 						return a.SecretKey > b.SecretKey
 					}))
 				if diff != "" {

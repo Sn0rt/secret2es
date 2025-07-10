@@ -25,6 +25,18 @@ print-binary-name:
 test:
 	@go test -v ./...
 
+lint:
+	@echo "Running golangci-lint..."
+	@golangci-lint run
+
+lint-install:
+	@echo "Installing golangci-lint..."
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+lint-fix:
+	@echo "Running golangci-lint with auto-fix..."
+	@golangci-lint run --fix
+
 clean:
 	@echo "Cleaning up..."
 	@rm -rf bin/*
@@ -39,5 +51,8 @@ help:
 	@echo "  make build-server- Build only the server binary"
 	@echo "  make clean       - Remove all binaries from the bin directory"
 	@echo "  make test        - Run tests"
+	@echo "  make lint        - Run golangci-lint"
+	@echo "  make lint-install- Install golangci-lint"
+	@echo "  make lint-fix    - Run golangci-lint with auto-fix"
 
-.PHONY: all build build-cli build-server print-binary-name test clean docker-build help
+.PHONY: all build build-cli build-server print-binary-name test lint lint-install lint-fix clean docker-build help

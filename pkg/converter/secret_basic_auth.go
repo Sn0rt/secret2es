@@ -2,12 +2,12 @@ package converter
 
 import (
 	"fmt"
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 func generateEsByBasicAuthSecret(inputSecret *internalSecret, storeType, storeName string,
-	creationPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) (*esv1beta1.ExternalSecret, error) {
+	creationPolicy esv1.ExternalSecretCreationPolicy, resolve bool) (*esv1.ExternalSecret, error) {
 	if len(inputSecret.Data) != 0 {
 		return nil, fmt.Errorf(ErrBasicAuthNotAllowDataField, inputSecret.Name)
 	}

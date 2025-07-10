@@ -2,7 +2,7 @@ package converter
 
 import (
 	"fmt"
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/pkg/errors"
@@ -16,8 +16,8 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 	tests := []struct {
 		name                 string
 		inputSecret          internalSecret
-		expectExternalSecret esv1beta1.ExternalSecret
-		store                esv1beta1.SecretStoreRef
+		expectExternalSecret esv1.ExternalSecret
+		store                esv1.SecretStoreRef
 		envs                 map[string]string // for render <% ENV %>
 		err                  error
 	}{
@@ -39,7 +39,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					},
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "test",
 				Kind: "ClusterSecretStore",
 			},
@@ -68,9 +68,9 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					"password": `sn0rt_<USER_SECRET_KEY>`,
 				},
 			},
-			expectExternalSecret: esv1beta1.ExternalSecret{
+			expectExternalSecret: esv1.ExternalSecret{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: "external-secrets.io/v1beta1",
+					APIVersion: "external-secrets.io/v1",
 					Kind:       "ExternalSecret",
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -80,20 +80,20 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 						"app": "test",
 					},
 				},
-				Spec: esv1beta1.ExternalSecretSpec{
+				Spec: esv1.ExternalSecretSpec{
 					RefreshInterval: stopRefreshInterval,
-					Target: esv1beta1.ExternalSecretTarget{
+					Target: esv1.ExternalSecretTarget{
 						Name:           "input1",
-						CreationPolicy: esv1beta1.CreatePolicyOrphan,
-						DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-						Template: &esv1beta1.ExternalSecretTemplate{
+						CreationPolicy: esv1.CreatePolicyOrphan,
+						DeletionPolicy: esv1.DeletionPolicyRetain,
+						Template: &esv1.ExternalSecretTemplate{
 							Type: corev1.SecretTypeBasicAuth,
-							Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+							Metadata: esv1.ExternalSecretTemplateMetadata{
 								Labels: map[string]string{
 									"app": "test",
 								},
 							},
-							MergePolicy: esv1beta1.MergePolicyReplace,
+							MergePolicy: esv1.MergePolicyReplace,
 							Data: map[string]string{
 								"host":     "localhost.local",
 								"username": `"{{ .USER_ACCESS_KEY }}"`,
@@ -101,14 +101,14 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 							},
 						},
 					},
-					SecretStoreRef: esv1beta1.SecretStoreRef{
+					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",
 					},
-					Data: []esv1beta1.ExternalSecretData{
+					Data: []esv1.ExternalSecretData{
 						{
 							SecretKey: "USER_ACCESS_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "test-foo",
 								MetadataPolicy:     "None",
 								Property:           "USER_ACCESS_KEY",
@@ -118,7 +118,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 						},
 						{
 							SecretKey: "USER_SECRET_KEY",
-							RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
+							RemoteRef: esv1.ExternalSecretDataRemoteRef{
 								Key:                "test-foo",
 								MetadataPolicy:     "None",
 								Property:           "USER_SECRET_KEY",
@@ -129,7 +129,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					},
 				},
 			},
-			store: esv1beta1.SecretStoreRef{
+			store: esv1.SecretStoreRef{
 				Name: "tenant-b",
 				Kind: "ClusterSecretStore",
 			},
@@ -144,7 +144,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1beta1.CreatePolicyOrphan, true)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, true)
 			if err != nil {
 				if tt.err == nil {
 					t.Errorf("unexpected error: %v", err)
@@ -154,7 +154,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					}
 				}
 			} else {
-				if diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(func(a, b esv1beta1.ExternalSecretData) bool {
+				if diff := cmp.Diff(externalSecret, &tt.expectExternalSecret, cmpopts.SortSlices(func(a, b esv1.ExternalSecretData) bool {
 					return a.SecretKey > b.SecretKey
 				})); diff != "" {
 					t.Errorf("%s case Mismatch (-want +got):\n%s", tt.name, diff)

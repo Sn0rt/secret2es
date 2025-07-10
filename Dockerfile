@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.23 AS go-builder
+FROM golang:1.24.5 AS go-builder
 
 # Set the working directory
 WORKDIR /go/src/github.com/sn0rt/secret2es
@@ -19,11 +19,11 @@ ARG BUILD_TIME
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -v -o secret2es \
-    -ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}" \
-    cmd/cli/main.go
+  -ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}" \
+  cmd/cli/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -v -o secret2es-server \
-    -ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}" \
-    cmd/server/main.go cmd/server/convert.go
+  -ldflags "-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}" \
+  cmd/server/main.go cmd/server/convert.go
 
 FROM node:18-alpine AS base
 

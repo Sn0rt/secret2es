@@ -39,12 +39,12 @@ Flags:
   -s, --storetype string         Store type (optional) (default "SecretStore")
 ```
 
-example 
+example
 
 ```shell
 ./secret2es es-gen -i e2e/templated.yaml -s ClusterSecretStore -n tenant-b -r true
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: input1

@@ -28,5 +28,5 @@ go.work
 secret2es
 secret2es-server
 /vendor
-
+.claude
 .vercel

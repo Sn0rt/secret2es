@@ -1,35 +1,92 @@
-# Secret2ES Web Interface
+# Secret2ES Web UI
 
-This is the web interface for the Secret2ES project, a tool designed to convert Kubernetes Secrets to External Secrets.
+A modern, componentized React application for converting ArgoCD Vault Plugin secrets to External Secrets format.
 
-## Overview
+## Architecture Overview
 
-The Secret2ES Web Interface provides a user-friendly way to interact with the Secret2ES conversion tool. It allows users to input Kubernetes Secret YAML and receive the corresponding External Secret YAML without needing to use the command-line interface.
+This application has been fully refactored with a clean, componentized architecture featuring:
 
-## Features
+- **Modular Components**: Separated UI logic into reusable components
+- **Custom Hooks**: Encapsulated business logic in custom React hooks  
+- **Type Safety**: Full TypeScript integration with proper type definitions
+- **Clean Separation**: Clear separation between UI, business logic, and utilities
 
-- Web-based interface for Secret to External Secret conversion
-- Real-time conversion without the need for local installation
-- Support for all options available in the CLI version
+## 📁 Directory Structure
 
-## Getting Started
+```
+web/
+├── app/                        # Next.js app directory
+│   ├── page.tsx               # Main page (componentized)
+│   └── layout.tsx             # Layout wrapper
+├── components/                 # React components
+│   ├── ui/                    # Base UI components (Shadcn/ui)
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   ├── checkbox.tsx
+│   │   ├── select.tsx
+│   │   ├── alert.tsx
+│   │   └── loading.tsx
+│   └── conversion/            # Conversion-specific components
+│       ├── ConversionForm.tsx
+│       ├── EnvironmentVariables.tsx
+│       ├── YamlEditor.tsx
+│       ├── ConversionResult.tsx
+│       ├── AlertMessages.tsx
+│       └── ConversionButton.tsx
+├── hooks/                     # Custom React hooks
+│   ├── useConversion.ts
+│   ├── useEnvironmentVariables.ts
+│   ├── useYamlEditor.ts
+│   └── useAlerts.ts
+├── types/                     # TypeScript type definitions
+│   └── conversion.ts
+├── constants/                 # Application constants
+│   ├── ui.ts
+│   └── api.ts
+└── utils/                     # Utility functions
+    ├── yaml.ts
+    ├── clipboard.ts
+    └── validation.ts
+```
 
-### Prerequisites
+## 🎯 Key Components
 
-- A modern web browser
-- Access to the Secret2ES server (usually running on `http://localhost:8080`)
+### Core Components
+- **ConversionForm**: Handles form inputs (store type, name, creation policy)
+- **EnvironmentVariables**: Manages environment variable inputs
+- **YamlEditor**: Syntax-highlighted YAML editor with overlay input
+- **ConversionResult**: Output display with copy-to-clipboard functionality
+- **AlertMessages**: Error and warning notifications
+- **ConversionButton**: Convert button with loading states
 
-### Usage
+### Custom Hooks
+- **useConversion**: Handles API calls and conversion logic
+- **useEnvironmentVariables**: Manages environment variable state
+- **useYamlEditor**: Handles YAML editing, validation, and height management
+- **useAlerts**: Manages error and warning messages
 
-1. Open the web interface in your browser.
-2. Paste your Kubernetes Secret YAML into the input field.
-3. Configure the conversion options as needed.
-4. Click the "Convert" button.
-5. The converted External Secret YAML will be displayed in the output field.
+## 🚀 Features
+
+- **Modular Architecture**: Clean separation of concerns
+- **Type Safety**: Full TypeScript integration
+- **Reusable Components**: Components can be easily reused
+- **Custom Hooks**: Encapsulated business logic
+- **Error Handling**: Comprehensive error and warning system
+- **Loading States**: Proper loading indicators
+- **Accessibility**: ARIA-compliant components
+- **Performance**: Optimized with React best practices
+
+## 🛠 Technical Stack
+
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Library**: Radix UI primitives
+- **Icons**: Lucide React
+- **Syntax Highlighting**: Prism.js via react-syntax-highlighter
+- **Notifications**: React Hot Toast
 
 ## Development
-
-This web interface is built using [insert technology stack here, e.g., React, Vue.js, etc.]. To set up the development environment:
 
 1. Clone the repository:
    ```

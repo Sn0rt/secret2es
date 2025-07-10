@@ -3,7 +3,7 @@ package converter
 import (
 	"encoding/json"
 	"fmt"
-	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
@@ -18,7 +18,7 @@ type Auths struct {
 }
 
 func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeName string,
-	creationPolicy esv1beta1.ExternalSecretCreationPolicy, resolve bool) (*esv1beta1.ExternalSecret, error) {
+	creationPolicy esv1.ExternalSecretCreationPolicy, resolve bool) (*esv1.ExternalSecret, error) {
 	if len(inputSecret.Data) != 0 {
 		return nil, fmt.Errorf(ErrDockerConfigJsonAcceptOnlyDataFields, inputSecret.Name)
 	}
@@ -38,7 +38,7 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 	}
 
 	// prepare the ref of sensitive data
-	var externalSecretData []esv1beta1.ExternalSecretData
+	var externalSecretData []esv1.ExternalSecretData
 	for _, loginInfo := range authFileContent.Auths {
 		propertyFromSecretData := captureFromFile.FindAllSubmatch([]byte(loginInfo.Auth), -1)
 		if len(propertyFromSecretData) == 0 {
@@ -48,12 +48,12 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 			output := strings.TrimSpace(string(s[1]))
 			// if secret key not found in externalSecretData then append to slice
 			if !contains(externalSecretData, output) {
-				externalSecretData = append(externalSecretData, esv1beta1.ExternalSecretData{
+				externalSecretData = append(externalSecretData, esv1.ExternalSecretData{
 					SecretKey: output,
-					RemoteRef: esv1beta1.ExternalSecretDataRemoteRef{
-						ConversionStrategy: esv1beta1.ExternalSecretConversionDefault,
-						DecodingStrategy:   esv1beta1.ExternalSecretDecodeNone,
-						MetadataPolicy:     esv1beta1.ExternalSecretMetadataPolicyNone,
+					RemoteRef: esv1.ExternalSecretDataRemoteRef{
+						ConversionStrategy: esv1.ExternalSecretConversionDefault,
+						DecodingStrategy:   esv1.ExternalSecretDecodeNone,
+						MetadataPolicy:     esv1.ExternalSecretMetadataPolicyNone,
 						Key:                vaultSecretKey,
 						Property:           output,
 					},
@@ -76,9 +76,9 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 	var out, _ = json.MarshalIndent(&dockerloginfo, "", "  ")
 	templateData[".dockerconfigjson"] = string(out)
 
-	return &esv1beta1.ExternalSecret{
+	return &esv1.ExternalSecret{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "external-secrets.io/v1beta1",
+			APIVersion: "external-secrets.io/v1",
 			Kind:       "ExternalSecret",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -86,22 +86,22 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 			Namespace: inputSecret.Namespace,
 			Labels:    inputSecret.ObjectMeta.Labels,
 		},
-		Spec: esv1beta1.ExternalSecretSpec{
+		Spec: esv1.ExternalSecretSpec{
 			RefreshInterval: stopRefreshInterval,
-			SecretStoreRef: esv1beta1.SecretStoreRef{
+			SecretStoreRef: esv1.SecretStoreRef{
 				Name: storeName,
 				Kind: storeType,
 			},
-			Target: esv1beta1.ExternalSecretTarget{
+			Target: esv1.ExternalSecretTarget{
 				Name:           inputSecret.Name,
 				CreationPolicy: creationPolicy,
-				DeletionPolicy: esv1beta1.DeletionPolicyRetain,
-				Template: &esv1beta1.ExternalSecretTemplate{
+				DeletionPolicy: esv1.DeletionPolicyRetain,
+				Template: &esv1.ExternalSecretTemplate{
 					Type: corev1.SecretTypeDockerConfigJson,
-					Metadata: esv1beta1.ExternalSecretTemplateMetadata{
+					Metadata: esv1.ExternalSecretTemplateMetadata{
 						Labels: inputSecret.ObjectMeta.Labels,
 					},
-					MergePolicy: esv1beta1.MergePolicyReplace,
+					MergePolicy: esv1.MergePolicyReplace,
 					Data:        templateData,
 				},
 			},
