@@ -4,6 +4,8 @@ image:
 
 replicaCount: 1
 
+namespace: default
+
 env:
   frontend:
     PORT: 3000
