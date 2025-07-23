@@ -3,10 +3,11 @@ package converter
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
 )
 
 type Auth struct {
@@ -18,7 +19,7 @@ type Auths struct {
 }
 
 func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeName string,
-	creationPolicy esv1.ExternalSecretCreationPolicy, resolve bool) (*esv1.ExternalSecret, error) {
+	creationPolicy esv1.ExternalSecretCreationPolicy, resolve bool, refreshPolicy esv1.ExternalSecretRefreshPolicy, refreshInterval *metav1.Duration) (*esv1.ExternalSecret, error) {
 	if len(inputSecret.Data) != 0 {
 		return nil, fmt.Errorf(ErrDockerConfigJsonAcceptOnlyDataFields, inputSecret.Name)
 	}
@@ -76,7 +77,7 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 	var out, _ = json.MarshalIndent(&dockerloginfo, "", "  ")
 	templateData[".dockerconfigjson"] = string(out)
 
-	return &esv1.ExternalSecret{
+	ret := &esv1.ExternalSecret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "external-secrets.io/v1",
 			Kind:       "ExternalSecret",
@@ -87,7 +88,8 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 			Labels:    inputSecret.ObjectMeta.Labels,
 		},
 		Spec: esv1.ExternalSecretSpec{
-			RefreshInterval: stopRefreshInterval,
+			RefreshPolicy:   refreshPolicy,
+			RefreshInterval: refreshInterval,
 			SecretStoreRef: esv1.SecretStoreRef{
 				Name: storeName,
 				Kind: storeType,
@@ -107,7 +109,13 @@ func generateEsByDockerConfigJSON(inputSecret *internalSecret, storeType, storeN
 			},
 			Data: externalSecretData,
 		},
-	}, nil
+	}
+
+	if refreshPolicy == esv1.RefreshPolicyPeriodic {
+		ret.Spec.RefreshInterval = refreshInterval
+	}
+
+	return ret, nil
 }
 
 func serializeDockerConfigJSON(dockerConfigJson []byte) (*Auths, error) {

@@ -13,13 +13,12 @@ import AlertMessages from '@/components/conversion/AlertMessages';
 import ConversionButton from '@/components/conversion/ConversionButton';
 
 // Zustand Stores
-import { 
+import {
   useConversionStore,
   useFormData,
   useIsFormValid,
   useInputYaml,
   useOutputYaml,
-  useContentHeight,
   useYamlError,
   useIsLoading,
   useWarning,
@@ -33,12 +32,11 @@ export default function Home() {
   const isFormValid = useIsFormValid();
   const inputYaml = useInputYaml();
   const outputYaml = useOutputYaml();
-  const contentHeight = useContentHeight();
   const yamlError = useYamlError();
   const isLoading = useIsLoading();
   const warning = useWarning();
   const errorMessage = useErrorMessage();
-  
+
   // Zustand store actions
   const {
     setInputYaml,
@@ -46,7 +44,7 @@ export default function Home() {
     clearError,
     convertYaml,
   } = useConversionStore();
-  
+
   // Temporarily disable auto-save to isolate the infinite loop issue
   // const autoSave = useAutoSave();
   // const { lastFormState, lastInputYaml } = useLastSavedState();
@@ -58,47 +56,56 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto p-4 flex-grow flex">
-      {/* Left sidebar - Form controls */}
-      <div className="w-1/6 pr-4 flex flex-col space-y-4">
+    <div className="flex-grow flex h-full" style={{ minHeight: '100vh' }}>
+      {/* Left sidebar - Form controls - Force it to always show */}
+      <div
+        className="flex-shrink-0 p-4 border-r border-gray-200 dark:border-gray-700 flex flex-col space-y-4 overflow-y-auto"
+        style={{
+          width: '320px',
+          minWidth: '320px',
+          maxWidth: '320px',
+          position: 'relative',
+          zIndex: 10
+        }}
+      >
         <ConversionForm />
-        
+
         <ConversionButton
           onClick={handleConvert}
           isLoading={isLoading}
           disabled={!isFormValid}
         />
-        
+
         {formData.resolve && (
           <EnvironmentVariables />
         )}
       </div>
 
       {/* Main content area - YAML editors */}
-      <div className="w-5/6 flex items-start relative">
+      <div className="flex-1 flex items-stretch relative p-2" style={{ minWidth: 0 }}>
         {/* Input YAML editor */}
-        <div className="w-[48%]">
+        <div className="flex-1 pr-1" style={{ minWidth: 0 }}>
           <YamlEditor
             value={inputYaml}
             onChange={setInputYaml}
             placeholder={PLACEHOLDERS.input}
-            height={contentHeight}
+            height="calc(100vh - 120px)"
           />
           {yamlError && (
-            <p className="text-red-500 mt-2 text-base">{yamlError}</p>
+            <p className="text-red-500 mt-1 text-sm">{yamlError}</p>
           )}
         </div>
 
         {/* Arrow separator */}
-        <div className="w-[4%] flex justify-center items-start pt-2">
-          <ArrowRight className="h-10 w-10 text-blue-500" />
+        <div className="w-8 flex justify-center items-center flex-shrink-0">
+          <ArrowRight className="h-6 w-6 text-blue-500" />
         </div>
 
         {/* Output YAML editor */}
-        <div className="w-[48%]">
+        <div className="flex-1 pl-1" style={{ minWidth: 0 }}>
           <ConversionResult
             outputYaml={outputYaml}
-            contentHeight={contentHeight}
+            contentHeight="calc(100vh - 120px)"
           />
         </div>
 

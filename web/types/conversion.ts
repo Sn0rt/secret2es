@@ -9,6 +9,8 @@ export interface ConversionRequest {
   storeName: string;
   creationPolicy: string;
   resolve: boolean;
+  refreshPolicy: string;
+  refreshInterval?: string;
   envVars?: Record<string, string>;
 }
 
@@ -35,6 +37,8 @@ export interface ConversionFormData {
   storeName: string;
   creationPolicy: string;
   resolve: boolean;
+  refreshPolicy: string;
+  refreshInterval: string;
 }
 
 export interface YamlEditorState {

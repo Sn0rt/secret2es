@@ -1,11 +1,12 @@
 package converter
 
 import (
+	"testing"
+
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 func TestGenerateEsByTLS(t *testing.T) {
@@ -48,7 +49,8 @@ data:
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "tls_secret_case1",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -119,7 +121,8 @@ data:
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "open-source-secret-with-github-action-test-sn0rt-dev",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -203,7 +206,8 @@ data:
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "open-source-secret-with-github-action-test-sn0rt-dev",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -291,7 +295,8 @@ StringData:
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "set-cert-with-pain-text",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -351,7 +356,7 @@ kuMRVfkhz0hiPXkLYEoA6e7s
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			inputSecretList, _ := parseUnstructuredSecret(tt.input)
-			out, err := convertSecret2ExtSecret(inputSecretList[0], tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, true)
+			out, err := convertSecret2ExtSecret(inputSecretList[0], tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, true, esv1.RefreshPolicyOnChange, "0s")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {

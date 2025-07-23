@@ -1,10 +1,11 @@
 package converter
 
 import (
-	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"os"
-	"sigs.k8s.io/yaml"
 	"testing"
+
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
+	"sigs.k8s.io/yaml"
 )
 
 func TestUnstructuredSecret(t *testing.T) {
@@ -132,7 +133,7 @@ stringData:
 				t.Errorf("parseUnstructuredSecret() returned an unexpected error: got: %v", err)
 			}
 			for _, v := range out {
-				externalSecret, err := convertSecret2ExtSecret(v, ClusterSecretStoreType, "test", esv1.CreatePolicyOrphan, true)
+				externalSecret, err := convertSecret2ExtSecret(v, ClusterSecretStoreType, "test", esv1.CreatePolicyOrphan, true, esv1.RefreshPolicyOnChange, "0s")
 				if err != nil {
 					t.Errorf("convertSecret2ExtSecret() returned an unexpected error: got: %v", err)
 				}

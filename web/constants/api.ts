@@ -15,4 +15,6 @@ export const DEFAULT_VALUES = {
   storeType: 'SecretStore',
   creationPolicy: 'Owner',
   resolve: false,
+  refreshPolicy: 'OnChange',
+  refreshInterval: '1h',
 } as const;

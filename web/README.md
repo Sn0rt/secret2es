@@ -7,13 +7,13 @@ A modern, componentized React application for converting ArgoCD Vault Plugin sec
 This application has been fully refactored with a clean, componentized architecture featuring:
 
 - **Modular Components**: Separated UI logic into reusable components
-- **Custom Hooks**: Encapsulated business logic in custom React hooks  
+- **Custom Hooks**: Encapsulated business logic in custom React hooks
 - **Type Safety**: Full TypeScript integration with proper type definitions
 - **Clean Separation**: Clear separation between UI, business logic, and utilities
 
 ## 📁 Directory Structure
 
-```
+```text
 web/
 ├── app/                        # Next.js app directory
 │   ├── page.tsx               # Main page (componentized)
@@ -52,6 +52,7 @@ web/
 ## 🎯 Key Components
 
 ### Core Components
+
 - **ConversionForm**: Handles form inputs (store type, name, creation policy)
 - **EnvironmentVariables**: Manages environment variable inputs
 - **YamlEditor**: Syntax-highlighted YAML editor with overlay input
@@ -60,6 +61,7 @@ web/
 - **ConversionButton**: Convert button with loading states
 
 ### Custom Hooks
+
 - **useConversion**: Handles API calls and conversion logic
 - **useEnvironmentVariables**: Manages environment variable state
 - **useYamlEditor**: Handles YAML editing, validation, and height management
@@ -89,18 +91,25 @@ web/
 ## Development
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/Sn0rt/sercert2extsecret.git
    ```
+
 2. Navigate to the web directory:
+
    ```
    cd sercert2extsecret/web
    ```
+
 3. Install dependencies:
+
    ```
    npm install
    ```
+
 4. Start the development server:
+
    ```
    npm run dev
    ```

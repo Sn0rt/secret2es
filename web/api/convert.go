@@ -20,12 +20,14 @@ import (
 )
 
 type ConvertRequest struct {
-	Content        string            `json:"content"`
-	StoreType      string            `json:"storeType"`
-	StoreName      string            `json:"storeName"`
-	CreationPolicy string            `json:"creationPolicy"`
-	Resolve        bool              `json:"resolve"`
-	EnvVars        map[string]string `json:"envVars,omitempty"`
+	Content         string            `json:"content"`
+	StoreType       string            `json:"storeType"`
+	StoreName       string            `json:"storeName"`
+	CreationPolicy  string            `json:"creationPolicy"`
+	Resolve         bool              `json:"resolve"`
+	RefreshPolicy   string            `json:"refreshPolicy"`
+	RefreshInterval *string           `json:"refreshInterval,omitempty"`
+	EnvVars         map[string]string `json:"envVars,omitempty"`
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -53,10 +55,44 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	if request.CreationPolicy == "" {
 		missingFields = append(missingFields, "creationPolicy")
 	}
+	if request.RefreshPolicy == "" {
+		missingFields = append(missingFields, "refreshPolicy")
+	}
 
 	if len(missingFields) > 0 {
 		errorResponse := map[string]string{
 			"error": fmt.Sprintf("Missing required fields: %s", strings.Join(missingFields, ", ")),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errorResponse)
+		return
+	}
+
+	// Validate refresh policy
+	validRefreshPolicies := []string{"CreatedOnce", "Periodic", "OnChange"}
+	isValidRefreshPolicy := false
+	for _, policy := range validRefreshPolicies {
+		if request.RefreshPolicy == policy {
+			isValidRefreshPolicy = true
+			break
+		}
+	}
+	if !isValidRefreshPolicy {
+		errorResponse := map[string]string{
+			"error": fmt.Sprintf("Invalid refresh policy: %s. Must be one of: %s",
+				request.RefreshPolicy, strings.Join(validRefreshPolicies, ", ")),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(errorResponse)
+		return
+	}
+
+	// Validate refresh interval for Periodic policy
+	if request.RefreshPolicy == "Periodic" && (request.RefreshInterval == nil || *request.RefreshInterval == "") {
+		errorResponse := map[string]string{
+			"error": "RefreshInterval is required when RefreshPolicy is Periodic",
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -74,12 +110,19 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var refreshInterval string
+	if request.RefreshInterval != nil {
+		refreshInterval = *request.RefreshInterval
+	}
+
 	result, warn, err := converter.ConvertSecretContent(
 		[]byte(request.Content),
 		request.StoreType,
 		request.StoreName,
 		esv1.ExternalSecretCreationPolicy(request.CreationPolicy),
 		request.Resolve,
+		esv1.ExternalSecretRefreshPolicy(request.RefreshPolicy),
+		refreshInterval,
 		request.EnvVars,
 	)
 
