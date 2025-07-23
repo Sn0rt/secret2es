@@ -2,14 +2,15 @@ package converter
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
-	"testing"
 )
 
 func TestGenerateBasicAuthSecret(t *testing.T) {
@@ -81,7 +82,8 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshInterval: nil,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "input1",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -144,7 +146,7 @@ func TestGenerateBasicAuthSecret(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, true)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, true, esv1.RefreshPolicyOnChange, "0s")
 			if err != nil {
 				if tt.err == nil {
 					t.Errorf("unexpected error: %v", err)

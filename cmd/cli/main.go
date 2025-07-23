@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"os"
+
+	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 
 	"github.com/spf13/cobra"
 
@@ -65,8 +66,24 @@ func extSecretGenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			refreshPolicy, err := cmd.Flags().GetString("refresh-policy")
+			if err != nil {
+				return err
+			}
+			refreshInterval, err := cmd.Flags().GetString("refresh-interval")
+			if err != nil {
+				return err
+			}
 
-			err = converter.ConvertSecret(inputPath, storeType, storeName, esv1.ExternalSecretCreationPolicy(creationPolicy), resolve)
+			// Validate refresh policy and interval combination
+			if refreshPolicy == "Periodic" && refreshInterval == "" {
+				return fmt.Errorf("refresh-interval is required when refresh-policy is Periodic")
+			}
+			if refreshPolicy != "Periodic" && refreshInterval == "" {
+				refreshInterval = "0s" // Set default for non-Periodic policies
+			}
+
+			err = converter.ConvertSecret(inputPath, storeType, storeName, esv1.ExternalSecretCreationPolicy(creationPolicy), resolve, esv1.ExternalSecretRefreshPolicy(refreshPolicy), refreshInterval)
 			if err != nil {
 				return err
 			}
@@ -79,6 +96,8 @@ func extSecretGenCmd() *cobra.Command {
 	cmd.Flags().StringP("storename", "n", "", "Store name (required)")
 	cmd.Flags().StringP("creation-policy", "c", "Owner", "Create policy, only Owner, Orphan")
 	cmd.Flags().BoolP("resolve", "r", false, "Resolve the <% ENV %> from env")
+	cmd.Flags().StringP("refresh-policy", "p", "OnChange", "Refresh policy: CreatedOnce, Periodic, or OnChange")
+	cmd.Flags().StringP("refresh-interval", "t", "", "Refresh interval (e.g., 30s, 5m, 1h) - only required when refresh-policy is Periodic")
 
 	err := cmd.MarkFlagRequired("input")
 	if err != nil {

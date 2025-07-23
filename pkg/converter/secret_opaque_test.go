@@ -2,13 +2,14 @@ package converter
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
-	"testing"
 )
 
 func TestGenerateStringDataOpaqueSecret(t *testing.T) {
@@ -60,7 +61,8 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "simple_example",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -137,7 +139,8 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "mix_env_value_with_vault",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -215,7 +218,8 @@ func TestGenerateStringDataOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "mix_two_style",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -321,7 +325,8 @@ port = 4000`,
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-a",
 						Kind: "ClusterSecretStore",
@@ -418,7 +423,8 @@ port = 4000`,
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",
@@ -514,7 +520,8 @@ port = 4000`,
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",
@@ -634,7 +641,8 @@ config:
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshInterval: nil,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
 					SecretStoreRef: esv1.SecretStoreRef{
 						Name: "tenant-b",
 						Kind: "ClusterSecretStore",
@@ -693,7 +701,7 @@ config:
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, tt.enableResolve)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, tt.enableResolve, esv1.RefreshPolicyOnChange, "0s")
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -784,7 +792,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshInterval: nil,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "simple_example",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -864,7 +873,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "multiple_env_with_path",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -940,7 +950,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "multiple_property",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -1039,7 +1050,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "mix_two_style",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -1197,7 +1209,8 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshInterval: nil,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "set_env_with_body_no_gen_es_2",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -1270,7 +1283,7 @@ func TestGenerateDataOpaqueSecret(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, tt.enableResolve)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, tt.enableResolve, esv1.RefreshPolicyOnChange, "0s")
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -1336,7 +1349,8 @@ func TestGenerateCreatePolicy(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshInterval: nil,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "simple_example",
 						CreationPolicy: esv1.CreatePolicyOwner,
@@ -1380,7 +1394,7 @@ func TestGenerateCreatePolicy(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOwner, true)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOwner, true, esv1.RefreshPolicyOnChange, "0s")
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)
@@ -1447,7 +1461,8 @@ func TestSkipResolveValue(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshInterval: nil,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "simple_example",
 						CreationPolicy: esv1.CreatePolicyOwner,
@@ -1525,7 +1540,8 @@ func TestSkipResolveValue(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
+					RefreshInterval: nil,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "mix_example1",
 						CreationPolicy: esv1.CreatePolicyOwner,
@@ -1598,7 +1614,7 @@ func TestSkipResolveValue(t *testing.T) {
 			for k, v := range tt.envs {
 				_ = os.Setenv(k, v)
 			}
-			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOwner, false)
+			externalSecret, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOwner, false, esv1.RefreshPolicyOnChange, "0s")
 			if err != nil {
 				if tt.err.Error() != err.Error() {
 					t.Errorf("Err Mismatch (+goot: %s)\n", err)

@@ -22,7 +22,8 @@ const (
 )
 
 func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName string,
-	creationPolicy esv1.ExternalSecretCreationPolicy, isResolve bool) (*esv1.ExternalSecret, error) {
+	creationPolicy esv1.ExternalSecretCreationPolicy, isResolve bool,
+	refreshPolicy esv1.ExternalSecretRefreshPolicy, refreshInterval *metav1.Duration) (*esv1.ExternalSecret, error) {
 	var currentSecretOpaqueSubType int
 	if len(inputSecret.Data) != 0 {
 		currentSecretOpaqueSubType = opaqueDataType
@@ -165,7 +166,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 		return nil, fmt.Errorf(ErrCommonNotNeedRefData, inputSecret.Name)
 	}
 
-	return &esv1.ExternalSecret{
+	ret := &esv1.ExternalSecret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "external-secrets.io/v1",
 			Kind:       "ExternalSecret",
@@ -176,7 +177,7 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			Labels:    inputSecret.ObjectMeta.Labels,
 		},
 		Spec: esv1.ExternalSecretSpec{
-			RefreshInterval: stopRefreshInterval,
+			RefreshPolicy: refreshPolicy,
 			SecretStoreRef: esv1.SecretStoreRef{
 				Name: storeName,
 				Kind: storeType,
@@ -196,7 +197,11 @@ func generateEsByOpaqueSecret(inputSecret *internalSecret, storeType, storeName 
 			},
 			Data: externalSecretData,
 		},
-	}, nil
+	}
+	if refreshPolicy == esv1.RefreshPolicyPeriodic {
+		ret.Spec.RefreshInterval = refreshInterval
+	}
+	return ret, nil
 }
 
 func resolveSecret(inputSecret *internalSecret) (err error) {

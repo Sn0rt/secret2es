@@ -20,18 +20,18 @@ interface SettingsState {
   defaultCreationPolicy: CreationPolicy;
   showLineNumbers: boolean;
   autoFormat: boolean;
-  
+
   // Recent conversions history (max 20 items)
   recentConversions: ConversionHistory[];
-  
+
   // Saved form state (for auto-restore)
   lastFormState?: ConversionFormData;
   lastInputYaml?: string;
-  
+
   // UI preferences
   sidebarCollapsed: boolean;
   editorFontSize: number;
-  
+
   // Actions - Settings
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setAutoSave: (enabled: boolean) => void;
@@ -41,17 +41,17 @@ interface SettingsState {
   setAutoFormat: (enabled: boolean) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setEditorFontSize: (size: number) => void;
-  
+
   // Actions - History
   addRecentConversion: (conversion: Omit<ConversionHistory, 'id' | 'timestamp'>) => void;
   removeRecentConversion: (id: string) => void;
   clearHistory: () => void;
   getRecentConversion: (id: string) => ConversionHistory | undefined;
-  
+
   // Actions - Auto-save
   saveFormState: (formData: ConversionFormData, inputYaml: string) => void;
   clearSavedState: () => void;
-  
+
   // Actions - Export/Import
   exportSettings: () => string;
   importSettings: (settingsJson: string) => boolean;
@@ -66,10 +66,10 @@ const initialSettings = {
   defaultCreationPolicy: DEFAULT_VALUES.creationPolicy as CreationPolicy,
   showLineNumbers: true,
   autoFormat: true,
-  
+
   // History
   recentConversions: [] as ConversionHistory[],
-  
+
   // UI preferences
   sidebarCollapsed: false,
   editorFontSize: 14,
@@ -80,47 +80,47 @@ export const useSettingsStore = create<SettingsState>()(
     persist(
       subscribeWithSelector((set, get) => ({
         ...initialSettings,
-        
+
         // Settings Actions
         setTheme: (theme: 'light' | 'dark' | 'system') => {
           set({ theme });
         },
-        
+
         setAutoSave: (autoSave: boolean) => {
           set({ autoSave });
         },
-        
+
         setDefaultStoreType: (defaultStoreType: StoreType) => {
           set({ defaultStoreType });
         },
-        
+
         setDefaultCreationPolicy: (defaultCreationPolicy: CreationPolicy) => {
           set({ defaultCreationPolicy });
         },
-        
+
         setShowLineNumbers: (showLineNumbers: boolean) => {
           set({ showLineNumbers });
         },
-        
+
         setAutoFormat: (autoFormat: boolean) => {
           set({ autoFormat });
         },
-        
+
         setSidebarCollapsed: (sidebarCollapsed: boolean) => {
           set({ sidebarCollapsed });
         },
-        
+
         setEditorFontSize: (editorFontSize: number) => {
           if (editorFontSize >= 10 && editorFontSize <= 24) {
             set({ editorFontSize });
           }
         },
-        
+
         // History Actions
         addRecentConversion: (conversion: Omit<ConversionHistory, 'id' | 'timestamp'>) => {
           const id = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           const timestamp = Date.now();
-          
+
           set((state) => {
             const newConversion: ConversionHistory = {
               ...conversion,
@@ -128,32 +128,32 @@ export const useSettingsStore = create<SettingsState>()(
               timestamp,
               title: conversion.title || `Conversion ${new Date(timestamp).toLocaleString()}`,
             };
-            
+
             // Keep only the latest 20 conversions
             const updatedHistory = [newConversion, ...state.recentConversions].slice(0, 20);
-            
+
             return {
               recentConversions: updatedHistory,
             };
           });
-          
+
           return id;
         },
-        
+
         removeRecentConversion: (id: string) => {
           set((state) => ({
             recentConversions: state.recentConversions.filter(conv => conv.id !== id),
           }));
         },
-        
+
         clearHistory: () => {
           set({ recentConversions: [] });
         },
-        
+
         getRecentConversion: (id: string): ConversionHistory | undefined => {
           return get().recentConversions.find(conv => conv.id === id);
         },
-        
+
         // Auto-save Actions
         saveFormState: (formData: ConversionFormData, inputYaml: string) => {
           if (get().autoSave) {
@@ -163,14 +163,14 @@ export const useSettingsStore = create<SettingsState>()(
             });
           }
         },
-        
+
         clearSavedState: () => {
           set({
             lastFormState: undefined,
             lastInputYaml: undefined,
           });
         },
-        
+
         // Export/Import Actions
         exportSettings: (): string => {
           const state = get();
@@ -189,14 +189,14 @@ export const useSettingsStore = create<SettingsState>()(
             recentConversions: state.recentConversions,
             exportTimestamp: Date.now(),
           };
-          
+
           return JSON.stringify(exportData, null, 2);
         },
-        
+
         importSettings: (settingsJson: string): boolean => {
           try {
             const importData = JSON.parse(settingsJson);
-            
+
             if (importData.version === '1.0' && importData.settings) {
               set((state) => ({
                 ...state,
@@ -211,7 +211,7 @@ export const useSettingsStore = create<SettingsState>()(
             return false;
           }
         },
-        
+
         resetToDefaults: () => {
           set(initialSettings);
         },

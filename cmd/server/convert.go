@@ -17,12 +17,14 @@ import (
 )
 
 type ConvertRequest struct {
-	Content        string            `json:"content"`
-	StoreType      string            `json:"storeType"`
-	StoreName      string            `json:"storeName"`
-	CreationPolicy string            `json:"creationPolicy"`
-	Resolve        bool              `json:"resolve"`
-	EnvVars        map[string]string `json:"envVars,omitempty"`
+	Content         string            `json:"content"`
+	StoreType       string            `json:"storeType"`
+	StoreName       string            `json:"storeName"`
+	CreationPolicy  string            `json:"creationPolicy"`
+	RefreshPolicy   string            `json:"refreshPolicy"`
+	RefreshInterval string            `json:"refreshInterval"`
+	Resolve         bool              `json:"resolve"`
+	EnvVars         map[string]string `json:"envVars,omitempty"`
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -71,12 +73,15 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	refreshPolicy := esv1.ExternalSecretRefreshPolicy(request.RefreshPolicy)
 	result, warn, err := converter.ConvertSecretContent(
 		[]byte(request.Content),
 		request.StoreType,
 		request.StoreName,
 		esv1.ExternalSecretCreationPolicy(request.CreationPolicy),
 		request.Resolve,
+		refreshPolicy,
+		request.RefreshInterval,
 		request.EnvVars,
 	)
 

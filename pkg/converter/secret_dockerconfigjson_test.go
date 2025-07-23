@@ -1,11 +1,12 @@
 package converter
 
 import (
+	"testing"
+
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 func TestGenEsByDockerConfigJSON(t *testing.T) {
@@ -62,7 +63,8 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 					},
 				},
 				Spec: esv1.ExternalSecretSpec{
-					RefreshInterval: stopRefreshInterval,
+					RefreshInterval: nil,
+					RefreshPolicy:   esv1.RefreshPolicyOnChange,
 					Target: esv1.ExternalSecretTarget{
 						Name:           "input1",
 						CreationPolicy: esv1.CreatePolicyOrphan,
@@ -112,7 +114,7 @@ func TestGenEsByDockerConfigJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, true)
+			out, err := convertSecret2ExtSecret(tt.inputSecret, tt.store.Kind, tt.store.Name, esv1.CreatePolicyOrphan, true, esv1.RefreshPolicyOnChange, "0s")
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			} else {
@@ -139,7 +141,7 @@ func TestSerializeDockerConfigJSON(t *testing.T) {
         },
         "https://index.docker.io:8443/v1": {
           "auth": "<PASSWD_FROM_VAULT>"
-        }      
+        }
       }
     }`),
 			expected: Auths{

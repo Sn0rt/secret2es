@@ -2,21 +2,24 @@ package converter
 
 import (
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	corev1 "k8s.io/api/core/v1"
-	"os"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
-	"strings"
 )
 
 // ConvertSecret converts a AVP Secret to an ExternalSecret for CLI
-func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1.ExternalSecretCreationPolicy, resolve bool) error {
+func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1.ExternalSecretCreationPolicy, resolve bool, refreshPolicy esv1.ExternalSecretRefreshPolicy, refreshInterval string) error {
 	bytes, err := os.ReadFile(inputFile)
 	if err != nil {
 		return fmt.Errorf("error reading inputSecret file: %w", err)
 	}
 
-	output, warn, err := ConvertSecretContent(bytes, storeType, storeName, creationPolicy, resolve, nil)
+	output, warn, err := ConvertSecretContent(bytes, storeType, storeName, creationPolicy, resolve, refreshPolicy, refreshInterval, nil)
 	if err != nil {
 		return fmt.Errorf("error converting secret: %w", err)
 	}
@@ -30,9 +33,11 @@ func ConvertSecret(inputFile, storeType, storeName string, creationPolicy esv1.E
 	return nil
 }
 
-func ConvertSecretContent(input []byte, storeType, storeName string,
+func ConvertSecretContent(input []byte,
+	storeType, storeName string, // store option, core
 	creationPolicy esv1.ExternalSecretCreationPolicy,
-	resolve bool,
+	resolve bool, // reslove the env var
+	refreshPolicy esv1.ExternalSecretRefreshPolicy, refreshInterval string, // control the refresh logic
 	EnvVars map[string]string) (string, string, error) {
 	output := ""
 	warn := ""
@@ -49,7 +54,7 @@ func ConvertSecretContent(input []byte, storeType, storeName string,
 	}
 
 	for _, inputSecret := range inputSecretList {
-		externalSecret, err := convertSecret2ExtSecret(inputSecret, storeType, storeName, creationPolicy, resolve)
+		externalSecret, err := convertSecret2ExtSecret(inputSecret, storeType, storeName, creationPolicy, resolve, refreshPolicy, refreshInterval)
 		if err != nil {
 			switch err.Error() {
 			case fmt.Errorf(ErrCommonNotIncludeAngleBrackets, inputSecret.Name).Error():
@@ -134,8 +139,22 @@ func postProcessOutputES(yamlData []byte) string {
 	return string(newYamlData)
 }
 
+func parseRefreshInterval(refreshInterval string) (*metav1.Duration, error) {
+	if refreshInterval == "" {
+		return stopRefreshInterval, nil
+	}
+
+	duration, err := time.ParseDuration(refreshInterval)
+	if err != nil {
+		return nil, fmt.Errorf("invalid refresh interval format: %s", refreshInterval)
+	}
+
+	return &metav1.Duration{Duration: duration}, nil
+}
+
 func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName string,
-	createPolicy esv1.ExternalSecretCreationPolicy, resolve bool) (*esv1.ExternalSecret, error) {
+	createPolicy esv1.ExternalSecretCreationPolicy, resolve bool,
+	refreshPolicy esv1.ExternalSecretRefreshPolicy, refreshInterval string) (*esv1.ExternalSecret, error) {
 	if err := secretCommonVerify(inputSecret); err != nil {
 		return nil, err
 	}
@@ -151,6 +170,18 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 		return nil, fmt.Errorf(illegalCreatePolicy, createPolicy)
 	}
 
+	// Validate and calculate refresh interval based on refresh policy
+	var refreshIntervalDuration *metav1.Duration
+	var err error
+
+	switch refreshPolicy {
+	case esv1.RefreshPolicyPeriodic:
+		refreshIntervalDuration, err = parseRefreshInterval(refreshInterval)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// get the secret of vault path
 	if resolve {
 		var resolvedSecretPath, err = resolved(inputSecret.Annotations["avp.kubernetes.io/path"])
@@ -162,13 +193,13 @@ func convertSecret2ExtSecret(inputSecret internalSecret, storeType, storeName st
 
 	switch inputSecret.Type {
 	case corev1.SecretTypeOpaque:
-		return generateEsByOpaqueSecret(&inputSecret, storeType, storeName, createPolicy, resolve)
+		return generateEsByOpaqueSecret(&inputSecret, storeType, storeName, createPolicy, resolve, refreshPolicy, refreshIntervalDuration)
 	case corev1.SecretTypeBasicAuth:
-		return generateEsByBasicAuthSecret(&inputSecret, storeType, storeName, createPolicy, resolve)
+		return generateEsByBasicAuthSecret(&inputSecret, storeType, storeName, createPolicy, resolve, refreshPolicy, refreshIntervalDuration)
 	case corev1.SecretTypeDockerConfigJson:
-		return generateEsByDockerConfigJSON(&inputSecret, storeType, storeName, createPolicy, resolve)
+		return generateEsByDockerConfigJSON(&inputSecret, storeType, storeName, createPolicy, resolve, refreshPolicy, refreshIntervalDuration)
 	case corev1.SecretTypeTLS:
-		return generateEsByTLS(&inputSecret, storeType, storeName, createPolicy, resolve)
+		return generateEsByTLS(&inputSecret, storeType, storeName, createPolicy, resolve, refreshPolicy, refreshIntervalDuration)
 	}
 
 	return nil, fmt.Errorf(NotImplSecretType, inputSecret.Type, inputSecret.Name)
